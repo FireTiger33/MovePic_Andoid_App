@@ -9,6 +9,8 @@ import com.stacktivity.movepic.Router;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
 
 public class FileManagerPresenter implements FileManagerContract.Presenter {
     final static private String tag = FileManagerPresenter.class.getName();
@@ -18,7 +20,7 @@ public class FileManagerPresenter implements FileManagerContract.Presenter {
 
     FileManagerPresenter(FileManagerContract.View view, Router router) {
         mView = view;
-        adapter = new FilesAdapter(mView.getViewContext(), router);
+        adapter = new FilesAdapter(this, mView.getViewContext(), router);
     }
 
     static public boolean isImage(String filePath) {
@@ -33,6 +35,21 @@ public class FileManagerPresenter implements FileManagerContract.Presenter {
         return mimeType != null && mimeType.contains("image");
     }
 
+    static public File[] sortFiles(final File[] files) {
+        if (files == null) {
+            return null;
+        }
+        Arrays.sort(files, new Comparator<File>() {
+            @Override
+            public int compare(File f1, File f2) {
+                if (f1.isDirectory() && !f2.isDirectory()) return -1;
+                if (f2.isDirectory() && !f1.isDirectory()) return 1;
+                return f1.getName().compareTo(f2.getName());
+            }
+        });
+
+        return files;
+    }
 
     @Override
     public FilesAdapter getFilesAdapter() {
@@ -83,5 +100,10 @@ public class FileManagerPresenter implements FileManagerContract.Presenter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onDirectoryChanged(String newPath) {
+        mView.showFolderPath(newPath);
     }
 }

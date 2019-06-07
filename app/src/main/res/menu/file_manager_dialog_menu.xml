@@ -4,16 +4,11 @@
     xmlns:yourapp="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_close"
-        android:title="@android:string/cancel"
-        android:icon="@drawable/ic_keyboard_backspace_red_24dp"
-        yourapp:showAsAction="always"
-        tools:ignore="AlwaysShowAction" />
-    <item
         android:id="@+id/action_search"
         android:title="@string/search"
         yourapp:showAsAction="always"
-        yourapp:actionViewClass="android.support.v7.widget.SearchView" />
+        yourapp:actionViewClass="android.support.v7.widget.SearchView"
+        tools:ignore="AlwaysShowAction" />
 
     <item
         android:id="@+id/action_select"

@@ -3,8 +3,29 @@
     android:id="@+id/activity_file_manager"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@android:color/black">
+    android:background="@android:color/black"
+    android:orientation="vertical">
+
+    <!--<android.support.v7.widget.Toolbar
+        android:id="@+id/file_manager_toolbar"
+        style="@style/Toolbar"
+        android:visibility="invisible">
+
+        <TextView
+            android:id="@+id/folder_path"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_toEndOf="@+id/action_close"
+            android:ellipsize="start"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+    </android.support.v7.widget.Toolbar>-->
+
+    <include
+        android:id="@+id/top_tool_bar"
+        layout="@layout/file_manager_top_action_bar" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/files"

@@ -1,8 +1,5 @@
 package com.stacktivity.movepic;
 
-import android.app.ActionBar;
-import android.app.TaskStackBuilder;
-import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
@@ -11,7 +8,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 
 import com.stacktivity.movepic.filemanager.FileManagerContract;
@@ -21,7 +17,7 @@ import com.stacktivity.movepic.movepic.MovePicView;
 
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity implements Router, NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements Router {
     final private String tag = MainActivity.class.getName();
 
 
@@ -29,6 +25,8 @@ public class MainActivity extends AppCompatActivity implements Router, Navigatio
     private final String TAG_FILEMANAGER = "FileManager";
 
     private Toolbar mToolBar;
+    private DrawerLayout drawer;
+    private NavigationView navigationView;
 
     final private FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -44,8 +42,7 @@ public class MainActivity extends AppCompatActivity implements Router, Navigatio
         mToolBar = findViewById(R.id.myToolBar);
         setSupportActionBar(mToolBar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
-        mToolBar.setVisibility(View.GONE);
-        //initNavView();
+//        mToolBar.setVisibility(View.GONE);
 
         /*fragmentManager.beginTransaction()
                 .replace(R.id.main_activity, new MainView())
@@ -54,17 +51,18 @@ public class MainActivity extends AppCompatActivity implements Router, Navigatio
         fragmentManager.beginTransaction()
                 .replace(R.id.main_container, fileManagerView, TAG_FILEMANAGER)
                 .commit();
+
+        initNavView();
     }
 
     private void initNavView() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, mToolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, drawer, fileManagerView.getToolBar(), R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(fileManagerView);
     }
 
     @Override
@@ -76,13 +74,16 @@ public class MainActivity extends AppCompatActivity implements Router, Navigatio
             }
         } else super.onBackPressed();
         if (fragmentManager.getBackStackEntryCount() == 0) {
-            mToolBar.setVisibility(View.GONE);
+//            mToolBar.setVisibility(View.GONE);
+            unlockNavView();
         }
     }
 
     @Override
     public void showMovePicScreen(final String pathPic, final int itemNum) {
         Log.d(tag, "showMovePicScreen");
+        lockNavView();
+
         Bundle args = new Bundle();
         args.putString(MovePicContract.TAG_PATHPIC, pathPic);
         args.putInt(MovePicContract.TAG_ITEM_NUM, itemNum);
@@ -102,16 +103,24 @@ public class MainActivity extends AppCompatActivity implements Router, Navigatio
     public void showFileManagerDialog(final FileManagerContract.Callback callback) {
         fileManagerCallback = callback;
 
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(FileManagerView.KEY_FILEMANAGER_DIALOG, true);
+
+        FileManagerView fileManagerView = new FileManagerView();
+        fileManagerView.setArguments(bundle);
+
         fragmentManager.beginTransaction()
-                .replace(R.id.main_container, fileManagerView)
+                .replace(R.id.main_container, fileManagerView, TAG_FILEMANAGER)
                 .addToBackStack(null)
                 .commit();
     }
 
     @Override
     public void back() {
-//        onBackPressed();
         fragmentManager.popBackStack();
+        if (fileManagerView.isVisible()) {
+            onBackPressed();
+        }
     }
 
     @Override
@@ -121,7 +130,17 @@ public class MainActivity extends AppCompatActivity implements Router, Navigatio
     }
 
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        return false;
+    public void showNavigationView() {
+        drawer.openDrawer(navigationView);
+    }
+
+    private void lockNavView() {
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        navigationView.setVisibility(View.GONE);
+    }
+
+    private void unlockNavView() {
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        navigationView.setVisibility(View.VISIBLE);
     }
 }

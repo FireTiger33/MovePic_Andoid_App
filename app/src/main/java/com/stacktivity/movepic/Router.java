@@ -1,5 +1,6 @@
 package com.stacktivity.movepic;
 
+
 import com.stacktivity.movepic.filemanager.FileManagerContract;
 
 public interface Router {
@@ -7,4 +8,5 @@ public interface Router {
     void showFileManagerDialog(FileManagerContract.Callback callback);
     void back();
     void folderSelected(String folderPath);
+    void showNavigationView();
 }

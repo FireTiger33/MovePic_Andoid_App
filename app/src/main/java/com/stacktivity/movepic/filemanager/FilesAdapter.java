@@ -14,8 +14,8 @@ import com.stacktivity.movepic.R;
 import com.stacktivity.movepic.Router;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Comparator;
+
+import static com.stacktivity.movepic.filemanager.FileManagerPresenter.sortFiles;
 
 /**
  * Адаптер для {@link RecyclerView}, отобрадающий список файлов в указанной директории.
@@ -28,6 +28,7 @@ class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> implements FileM
     final private short TYPE_FILE = 0;
     final private short TYPE_FOLDER = 1;
 
+    private final FileManagerContract.Presenter mPresenter;
     private final Router router;
     private final LayoutInflater layoutInflater;
     private File initialFile;
@@ -37,7 +38,8 @@ class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> implements FileM
 
     private FileManagerView.OnClickFileManagerItem onClickFileItem = this;
 
-    FilesAdapter(final Context context, Router router) {
+    FilesAdapter(final FileManagerContract.Presenter presenter, final Context context, Router router) {
+        mPresenter = presenter;
         layoutInflater = LayoutInflater.from(context);
         this.router = router;
         init();
@@ -59,7 +61,7 @@ class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> implements FileM
     private void setDirectory(final File file) {
         this.currentFile = file;
         this.files = file.listFiles();
-//        sortFiles(this.files);
+        sortFiles(this.files);
         notifyDataSetChanged();
     }
 
@@ -69,6 +71,7 @@ class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> implements FileM
         }
         File parent = currentFile.getParentFile();
         if (parent != null) {
+            mPresenter.onDirectoryChanged(parent.getPath());
             setDirectory(parent);
             return true;
         }
@@ -78,7 +81,7 @@ class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> implements FileM
     @NonNull
     @Override
     public FileViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        Log.d(tag, "onCreateViewHolder: viewType = " + viewType);
+//        Log.d(tag, "onCreateViewHolder: viewType = " + viewType);
         View view;
         if (viewType == TYPE_FOLDER) {
             view = layoutInflater.inflate(R.layout.folder_item, parent, false);
@@ -104,24 +107,11 @@ class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> implements FileM
         return TYPE_FILE;
     }
 
-    private static void sortFiles(final File[] files) {
-        if (files == null) {
-            return;
-        }
-        Arrays.sort(files, new Comparator<File>() {
-            @Override
-            public int compare(File f1, File f2) {
-                if (f1.isDirectory() && !f2.isDirectory()) return -1;
-                if (f2.isDirectory() && !f1.isDirectory()) return 1;
-                return f1.getName().compareTo(f2.getName());
-            }
-        });
-    }
-
     @Override
     public void onClickDirectory(File file) {
         Log.d(tag, "onClickDirectory");
         setDirectory(file);
+        mPresenter.onDirectoryChanged(file.getPath());
     }
 
     @Override

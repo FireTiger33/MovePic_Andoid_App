@@ -20,6 +20,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.stacktivity.movepic.filemanager.FileManagerPresenter.sortFiles;
+
 
 class ImagePagerAdapter extends PagerAdapter {
     final private String tag = ImagePagerAdapter.class.getName();
@@ -39,7 +41,8 @@ class ImagePagerAdapter extends PagerAdapter {
 
         File file = new File(imagePath);
         file = file.getParentFile();
-        for (File currentFile: file.listFiles()) {
+
+        for (File currentFile: sortFiles(file.listFiles())) {
             String currentFilePath = currentFile.getPath();
             if (FileManagerPresenter.isImage(currentFilePath)) {
                 imagesPaths.add(currentFilePath);

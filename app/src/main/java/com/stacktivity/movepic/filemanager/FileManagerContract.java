@@ -1,6 +1,7 @@
 package com.stacktivity.movepic.filemanager;
 
 import android.content.Context;
+import android.support.v7.widget.Toolbar;
 
 public interface FileManagerContract {
     interface Callback {
@@ -11,6 +12,8 @@ public interface FileManagerContract {
     interface View {
         Context getViewContext();
         void showCreateFolderDialog();
+        void showFolderPath(String path);
+        Toolbar getToolBar();
     }
 
     interface Presenter {
@@ -20,5 +23,6 @@ public interface FileManagerContract {
         void createFolder(String name);
         String getCurrentDirectory();
         void createNomedia();
+        void onDirectoryChanged(String newPath);
     }
 }

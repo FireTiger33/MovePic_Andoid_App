@@ -92,9 +92,8 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     }
 
     @Override
-    public void onImageDoubleClick(View imageView, Bitmap fullImage,/*String imagePath,*/ float x, float y) {
+    public void onImageDoubleClick(View imageView, Bitmap fullImage, float x, float y) {
         mView.zoomImageFromThumb(imageView, fullImage, x, y);
-//        mView.zoomImageFromThumbPath(imagePath, x, y);
     }
 
     @Override
@@ -188,6 +187,7 @@ public class MovePicPresenter implements MovePicContract.Presenter {
             Log.d(tag, "copyFile: sourceFile deleted");
         }
     }
+
     /*private String SavePicture(Bitmap bitmap, String fileToSave) {
         OutputStream fOut;
         try {
