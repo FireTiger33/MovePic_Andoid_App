@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">MovePic</string>
+    <string name="folder">folder</string>
+    <string name="image">image</string>
+    <string name="expanded_image">expanded_image</string>
+    <string name="select">select</string>
+    <string name="more">more</string>
+    <string name="delete">delete</string>
+    <string name="search">search</string>
+    <string name="add_binding">Add binding</string>
+    <string name="add_folder">Add folder</string>
+    <string name="addNomedia">make unreachable for gallery</string>
+    <string name="navigation_drawer_open" />
+    <string name="navigation_drawer_close" />
+    <string name="communicate">Communicate</string>
+    <string name="AppName">MovePic</string>
+</resources>

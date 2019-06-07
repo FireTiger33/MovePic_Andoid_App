@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:yourapp="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_close"
+        android:title="@android:string/cancel"
+        android:icon="@drawable/ic_keyboard_backspace_red_24dp"
+        yourapp:showAsAction="always"
+        tools:ignore="AlwaysShowAction" />
+    <item
+        android:id="@+id/action_search"
+        android:title="@string/search"
+        yourapp:showAsAction="always"
+        yourapp:actionViewClass="android.support.v7.widget.SearchView" />
+
+    <item
+        android:id="@+id/action_select"
+        android:title="@android:string/ok"
+        android:icon="@drawable/ic_done_green_24dp"
+        yourapp:showAsAction="always"
+        />
+    <item
+        android:id="@+id/action_add"
+        android:title="@string/add_folder"/>
+    <item
+        android:id="@+id/action_add_nomedia"
+        android:title="@string/addNomedia"/>
+</menu>
