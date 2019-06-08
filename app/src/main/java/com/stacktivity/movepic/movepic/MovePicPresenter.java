@@ -53,7 +53,7 @@ public class MovePicPresenter implements MovePicContract.Presenter {
 
     @Override
     public File getCurrentImageFile() {
-        return imageAdapter.getFile(mView.getCurrentItemNum());
+        return imageAdapter.getFile(getCurrentImageNum());
     }
 
     @Override
@@ -64,6 +64,11 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     @Override
     public String getCurrentImageName() {
         return imageAdapter.getName(mView.getCurrentItemNum());
+    }
+
+    @Override
+    public int getCurrentImageNum() {
+        return mView.getCurrentItemNum();
     }
 
     @Override
@@ -78,7 +83,45 @@ public class MovePicPresenter implements MovePicContract.Presenter {
 
     @Override
     public void deleteCurrentImage() {
-        deleteImage(getCurrentImageFile());
+        Log.d(tag, "deleteCurrentImage");
+        int left = imageAdapter.deleteImage(getCurrentImageNum());
+        if (left < 1) {
+            mRouter.back();
+        }
+    }
+
+    @Override
+    public void deleteCurrentImageBuffered() {
+        Log.d(tag, "deleteCurrentImageBuffered");
+        int left = imageAdapter.deleteImageBuffered(getCurrentImageNum());
+        if (left < 1) {
+            mRouter.back();
+        }
+    }
+
+    @Override
+    public void onButtonRestoreImageClicked() {
+        int res = imageAdapter.restoreLastDeletedImage();
+        final Toast toast;
+        switch (res) {
+            case 0: toast = Toast.makeText(mView.getViewContext(),
+                    "Picture successfully restored",
+                    Toast.LENGTH_SHORT);
+                    break;
+            case 1: toast = Toast.makeText(mView.getViewContext(),
+                    "Recovery error",
+                    Toast.LENGTH_SHORT);
+                    break;
+            case 2: toast = Toast.makeText(mView.getViewContext(),
+                    "Buffer is empty",
+                    Toast.LENGTH_SHORT);
+                    break;
+            default: toast = Toast.makeText(mView.getViewContext(),
+                    "Unknown error",
+                    Toast.LENGTH_SHORT);
+                    break;
+        }
+        toast.show();
     }
 
     @Override
@@ -87,7 +130,7 @@ public class MovePicPresenter implements MovePicContract.Presenter {
         File sourceFile = getCurrentImageFile();
         boolean copyComplete = writeFileTo(sourceFile, bindButtonsAdapter.getPath(pos) + '/');
         if (copyComplete) {
-            deleteImage(sourceFile);
+            deleteCurrentImage();
         }
     }
 
@@ -126,21 +169,11 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     }
 
     private boolean writeFileTo(File sourceFile, String folderToSave) {
-        // проверяем доступность SD
         if (!Environment.getExternalStorageState().equals(
                 Environment.MEDIA_MOUNTED)) {
             Log.d(tag, "SD-карта не доступна: " + Environment.getExternalStorageState());
             return false;
         }
-
-        /*// test correctly name
-        String justName = sourceFile.getName();
-        String name = getCurrentImageName();
-        Log.d(tag, "just name = " + justName);
-        Log.d(tag, "name = " + name);
-        if (!name.equals(justName)) {
-            Log.e(tag, "writeFileTo: different names");
-        }*/
 
         return copyFile(sourceFile, new File(folderToSave + sourceFile.getName()));
     }
@@ -177,32 +210,4 @@ public class MovePicPresenter implements MovePicContract.Presenter {
             return false;
         }
     }
-
-    private void deleteImage(File imageFile) {
-        if (imageFile.delete()) {
-            int left = imageAdapter.deletedImage(mView.getCurrentItemNum());
-            if (left < 1) {
-                mRouter.back();
-            }
-            Log.d(tag, "copyFile: sourceFile deleted");
-        }
-    }
-
-    /*private String SavePicture(Bitmap bitmap, String fileToSave) {
-        OutputStream fOut;
-        try {
-            File file = new File(fileToSave); // создать уникальное имя для файла основываясь на дате сохранения
-            fOut = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut); // сохранять картинку в jpeg-формате с 85% сжатия.
-            fOut.flush();
-            Log.d(tag, "чёта записали");
-            fOut.close();
-//            MediaStore.Images.Media.insertImage(getContentResolver(), file.getAbsolutePath(), file.getName(),  file.getName()); // регистрация в фотоальбоме
-        }
-        catch (Exception e) // здесь необходим блок отслеживания реальных ошибок и исключений, общий Exception приведен в качестве примера
-        {
-            return e.getMessage();
-        }
-        return "";
-    }*/
 }

@@ -24,9 +24,23 @@ public interface MovePicContract {
         File getCurrentImageFile();
         Bitmap getCurrentImageBitmap();
         String getCurrentImageName();
+        int getCurrentImageNum();
         BindButtonsAdapter getBindButtonsAdapter();
         ImagePagerAdapter getImageAdapter();
+
+
         void deleteCurrentImage();
+        void deleteCurrentImageBuffered();
+
+        /**
+         * Attempts to restore the last deleted image.
+         * For any result, one of the toasts is shown:
+         * 1) Picture successfully restored
+         * 2) Recovery error
+         * 3) Buffer is empty
+         * 4) Unknown error
+         */
+        void onButtonRestoreImageClicked();
         void onBindButtonClick(int pos);
         void onImageDoubleClick(android.view.View imageView, Bitmap fullImage, float x, float y);
         int[] getSizeImageContainer();

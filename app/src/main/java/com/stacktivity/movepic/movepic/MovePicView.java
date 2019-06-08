@@ -65,10 +65,14 @@ public class MovePicView extends Fragment implements MovePicContract.View {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_delete:
-                mPresenter.deleteCurrentImage();
+                mPresenter.deleteCurrentImageBuffered();
                 break;
             case R.id.action_add:
                 mPresenter.addBindButton();
+                break;
+            case R.id.action_restore_image:
+                mPresenter.onButtonRestoreImageClicked();
+                break;
         }
         return true;
     }

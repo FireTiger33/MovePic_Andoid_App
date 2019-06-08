@@ -130,7 +130,7 @@ class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> implements FileM
         router.showMovePicScreen(file.getPath(), pos);
     }
 
-    public String getCurrentDirectory() {
+    String getCurrentDirectory() {
         return currentFile.getPath();
     }
 }

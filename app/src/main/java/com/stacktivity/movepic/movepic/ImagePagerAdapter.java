@@ -17,6 +17,10 @@ import com.stacktivity.movepic.controllers.OnDoubleTouchListener;
 import com.stacktivity.movepic.filemanager.FileManagerPresenter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +35,9 @@ class ImagePagerAdapter extends PagerAdapter {
 
     private int[] imageContainerSize;
 
-    private List<Bitmap> imagesBitmapBuffer = new ArrayList<>();
+    private Bitmap[] imagesBitmapBuffer = new Bitmap[2];
+    private String[] imagesPathBuffer = new String[2];
+
     private List<String> imagesPaths = new ArrayList<>();
 
 
@@ -158,11 +164,91 @@ class ImagePagerAdapter extends PagerAdapter {
         return PagerAdapter.POSITION_NONE;
     }
 
-    int deletedImage(int pos) {
+    /**
+     * Removes the current image from the memory and the adapter itself.
+     * @return number of remaining images in the folder
+     */
+    int deleteImage(int pos) {
         Log.d(tag, "deleteImage: " + pos);
-        imagesPaths.remove(pos);
+        String path = imagesPaths.get(pos);
+        if (new File(path).delete()) {
+            imagesPaths.remove(pos);
+            Log.d(tag, "deleteImage: Image " + path + " deleted");
+        }
         notifyDataSetChanged();
 
         return imagesPaths.size();
+    }
+
+    private void saveImageToBuffer(int pos) {
+        imagesBitmapBuffer[0] = imagesBitmapBuffer[1];
+        imagesBitmapBuffer[1] = this.getBitmap(pos);
+        imagesPathBuffer[0] = imagesPathBuffer[1];
+        imagesPathBuffer[1] = imagesPaths.get(pos);
+    }
+
+    /**
+     * Removes the current image from the memory and the adapter itself.
+     * Saves Bitmap and path to buffer[2] for possible recovery.
+     * @return number of remaining images in the folder
+     */
+    int deleteImageBuffered(int pos) {
+        Log.d(tag, "deleteImageBuffered: " + pos);
+        saveImageToBuffer(pos);
+
+        return deleteImage(pos);
+    }
+
+    /**
+     * Experimental function to restore the last deleted image from RAM.
+     * File recovery is performed in one of two formats: JPEG or PNG.
+     * @return 0 if success; 1 if error; 2 if buffer is empty
+     */
+    int restoreLastDeletedImage() {
+        final String fName = "restoreLastDeletedImage: ";
+
+        if (imagesPathBuffer[1] == null) {
+            Log.d(tag, "Нечего восстанавливать");
+            return 2;
+        }
+        Log.d(tag, fName+ imagesPathBuffer[1]);
+        File file = new File(imagesPathBuffer[1]);
+        OutputStream fOut;
+        try {
+            fOut = new FileOutputStream(file);
+            String fileFormat = imagesPathBuffer[1].substring(imagesPathBuffer[1].lastIndexOf(".")+1);
+            Log.d(tag, "image format is: " + fileFormat);
+            Bitmap.CompressFormat compressFormat = fileFormat.equalsIgnoreCase("PNG")?
+                    Bitmap.CompressFormat.PNG:
+                    Bitmap.CompressFormat.JPEG;
+            imagesBitmapBuffer[1].compress(compressFormat, 100, fOut);
+            fOut.flush();
+            Log.d(tag, fName +"complete");
+            fOut.close();
+
+            // Add image to adapter
+            imagesPaths.add(mPresenter.getCurrentImageNum(), imagesPathBuffer[1]);
+            notifyDataSetChanged();
+
+            deleteLastItemFromBuffer();
+
+            return 0;
+//            MediaStore.Images.Media.insertImage(getContentResolver(), file.getAbsolutePath(), file.getName(),  file.getName()); // регистрация в фотоальбоме
+        } catch (FileNotFoundException e) {
+            Log.d(tag, fName + "File could not be created.");
+            e.printStackTrace();
+            return 1;
+        } catch (IOException e) {
+            Log.d(tag, fName + "I/O error");
+            e.printStackTrace();
+            return 1;
+        }
+    }
+
+    private void deleteLastItemFromBuffer() {
+        imagesBitmapBuffer[1] = imagesBitmapBuffer[0];
+        imagesBitmapBuffer[0] = null;
+        imagesPathBuffer[1] = imagesPathBuffer[0];
+        imagesPathBuffer[0] = null;
     }
 }
