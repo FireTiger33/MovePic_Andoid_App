@@ -2,11 +2,12 @@ package com.stacktivity.movepic.movepic.binded_buttons;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+
+import androidx.annotation.NonNull;
 
 import com.stacktivity.movepic.R;
 import com.stacktivity.movepic.movepic.MovePicContract;

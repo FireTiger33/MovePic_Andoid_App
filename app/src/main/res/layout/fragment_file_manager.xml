@@ -27,7 +27,7 @@
         android:id="@+id/top_tool_bar"
         layout="@layout/file_manager_top_action_bar" />
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/files"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

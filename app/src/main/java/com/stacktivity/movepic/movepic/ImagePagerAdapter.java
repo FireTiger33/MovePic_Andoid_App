@@ -5,13 +5,14 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.CountDownTimer;
-import android.support.annotation.NonNull;
-import android.support.v4.view.PagerAdapter;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
+import androidx.annotation.NonNull;
+import androidx.viewpager.widget.PagerAdapter;
 
 import com.stacktivity.movepic.controllers.OnDoubleTouchListener;
 import com.stacktivity.movepic.filemanager.FileManagerPresenter;

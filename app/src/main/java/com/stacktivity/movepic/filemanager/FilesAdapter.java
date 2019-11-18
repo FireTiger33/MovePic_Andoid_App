@@ -3,12 +3,13 @@ package com.stacktivity.movepic.filemanager;
 import android.content.Context;
 import android.os.Environment;
 
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.stacktivity.movepic.R;
 import com.stacktivity.movepic.Router;
@@ -18,9 +19,8 @@ import java.io.File;
 import static com.stacktivity.movepic.filemanager.FileManagerPresenter.sortFiles;
 
 /**
- * Адаптер для {@link RecyclerView}, отобрадающий список файлов в указанной директории.
+ * Адаптер для {@link RecyclerView}, отображающий список файлов в указанной директории.
  * Начинает обзор с корня внешнего хранилища. Поддерживает навигацию по директориям.
- * Для упрощения кода опущены проверки наличия (примонтированности) внешнего хранилища.
  */
 class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> implements FileManagerView.OnClickFileManagerItem{
     final private String tag = FilesAdapter.class.getName();

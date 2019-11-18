@@ -3,11 +3,12 @@ package com.stacktivity.movepic.filemanager;
 import android.annotation.SuppressLint;
 import android.graphics.Typeface;
 import android.net.Uri;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.stacktivity.movepic.R;
 

@@ -9,14 +9,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -28,6 +20,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.navigation.NavigationView;
 import com.stacktivity.movepic.R;
 import com.stacktivity.movepic.Router;
 
@@ -68,37 +69,8 @@ public class FileManagerView extends Fragment implements FileManagerContract.Vie
     interface OnClickFileManagerItem {
         void onClickDirectory(final File file);
         void onClickImage(final File file, int imagePosition);
+
     }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        Log.d(tag, "onCreateOptionsMenu");
-        inflater.inflate(R.menu.file_manager_dialog_menu, menu);
-
-        if (!isDialogSession) {
-            menu.findItem(R.id.action_select).setVisible(false);
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_select:
-                router.folderSelected(mPresenter.getCurrentDirectory());
-                break;
-            case R.id.action_add:
-                Log.d(tag, "onAddFolderBtnClick");
-                mPresenter.onAddFolderButtonClick();
-                break;
-            case R.id.action_add_nomedia:
-                mPresenter.createNomedia();
-                break;
-            case R.id.action_search:
-                break;
-        }
-        return true;
-    }
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         Log.d(tag, "onCreate");
@@ -145,12 +117,89 @@ public class FileManagerView extends Fragment implements FileManagerContract.Vie
         return mView;
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(tag, "onPause");
+
+        mPreferences.edit().putString(KEY_PATH, mPresenter.getCurrentDirectory()).apply();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        Log.d(tag, "onCreateOptionsMenu");
+        inflater.inflate(R.menu.file_manager_dialog_menu, menu);
+
+        if (!isDialogSession) {
+            menu.findItem(R.id.action_select).setVisible(false);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_select:
+                router.folderSelected(mPresenter.getCurrentDirectory());
+                break;
+            case R.id.action_add:
+                Log.d(tag, "onAddFolderBtnClick");
+                mPresenter.onAddFolderButtonClick();
+                break;
+            case R.id.action_add_nomedia:
+                mPresenter.createNomedia();
+                break;
+            case R.id.action_search:
+                break;
+        }
+        return true;
+    }
+
+    @Override
+    public void showFolderPath(String path) {
+        folderPathTextView.setText(path);
+    }
+
+    @Override
+    public void showCreateFolderDialog() {
+        Log.d(tag, "showCreateFolderDialog");
+        final AlertDialog.Builder createNewFolderDialog = new AlertDialog.Builder(getContext());
+        final EditText folderName = createNewFolderDialogView.findViewById(R.id.folder_name);
+        if (createNewFolderDialogView.getParent() != null) {
+            ((ViewGroup) createNewFolderDialogView.getParent()).removeView(createNewFolderDialogView);
+        }
+        createNewFolderDialog.setView(createNewFolderDialogView);
+        createNewFolderDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (folderName.getText() != null) {
+                    mPresenter.createFolder(folderName.getText().toString());
+                }
+            }
+        });
+        createNewFolderDialog.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                folderName.setText("");
+            }
+        });
+        createNewFolderDialog.show();
+    }
+
     private void configFilesView(View view) {
         Log.d(tag, "configFilesView");
         RecyclerView recyclerView = view.findViewById(R.id.files);
         recyclerView.setAdapter(mPresenter.getFilesAdapter());
         recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         showFolderPath(mPresenter.getCurrentDirectory());
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            mPresenter.getFilesAdapter().init();
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     private void checkPermission(View view) {
@@ -186,59 +235,11 @@ public class FileManagerView extends Fragment implements FileManagerContract.Vie
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            mPresenter.getFilesAdapter().init();
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    @Override
-    public void showCreateFolderDialog() {
-        Log.d(tag, "showCreateFolderDialog");
-        final AlertDialog.Builder createNewFolderDialog = new AlertDialog.Builder(getContext());
-        final EditText folderName = createNewFolderDialogView.findViewById(R.id.folder_name);
-        if (createNewFolderDialogView.getParent() != null) {
-            ((ViewGroup) createNewFolderDialogView.getParent()).removeView(createNewFolderDialogView);
-        }
-        createNewFolderDialog.setView(createNewFolderDialogView);
-        createNewFolderDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (folderName.getText() != null) {
-                    mPresenter.createFolder(folderName.getText().toString());
-                }
-            }
-        });
-        createNewFolderDialog.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-                folderName.setText("");
-            }
-        });
-        createNewFolderDialog.show();
-    }
-
-    @Override
-    public void showFolderPath(String path) {
-        folderPathTextView.setText(path);
-    }
-
-    @Override
     public Toolbar getToolBar() {
         return (Toolbar) mTopToolBar;
     }
 
     public boolean isParentDirectory() {
         return !mPresenter.getFilesAdapter().goBack();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(tag, "onPause");
-
-        mPreferences.edit().putString(KEY_PATH, mPresenter.getCurrentDirectory()).apply();
     }
 }
