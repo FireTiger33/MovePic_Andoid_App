@@ -1,13 +1,20 @@
 package com.stacktivity.movepic;
 
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 
@@ -17,6 +24,7 @@ import com.stacktivity.movepic.filemanager.FileManagerView;
 import com.stacktivity.movepic.movepic.MovePicContract;
 import com.stacktivity.movepic.movepic.MovePicView;
 
+import java.io.File;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements Router {
@@ -35,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements Router {
     private FileManagerContract.Callback fileManagerCallback;
 
     private FileManagerView fileManagerView;
+    private FileManagerView fileManagerViewDialog;
 
 
     @Override
@@ -49,12 +58,41 @@ public class MainActivity extends AppCompatActivity implements Router {
         /*fragmentManager.beginTransaction()
                 .replace(R.id.main_activity, new MainView())
                 .commit();*/
+        checkPermission();
+
+        //initNavView();
+    }
+
+    private void createFileManagerView() {
         fileManagerView = new FileManagerView();
         fragmentManager.beginTransaction()
                 .replace(R.id.main_container, fileManagerView, TAG_FILEMANAGER)
                 .commit();
+    }
 
-        initNavView();
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            //mPresenter.getFilesAdapter().init();
+            createFileManagerView();
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    private void checkPermission() {
+        Log.d(tag, "checkPermission");
+        boolean returnVal = true;
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED) {
+
+            returnVal = false;
+        }
+
+        String[] permissions = new String[1];
+        permissions[0] = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+            requestPermissions(permissions,
+                    1
+            );
     }
 
     private void initNavView() {
@@ -70,8 +108,11 @@ public class MainActivity extends AppCompatActivity implements Router {
     @Override
     public void onBackPressed() {
         if (fileManagerView.isVisible()) {
-            Log.d(tag, "onBackPressed: fileManager isVisible");
-            if (fileManagerView.isParentDirectory()) {
+            if (!fileManagerView.goBack()) {
+                super.onBackPressed();
+            }
+        } else if (fileManagerViewDialog != null && fileManagerViewDialog.isVisible()) {
+            if (!fileManagerViewDialog.goBack()) {
                 super.onBackPressed();
             }
         } else super.onBackPressed();
@@ -108,11 +149,11 @@ public class MainActivity extends AppCompatActivity implements Router {
         Bundle bundle = new Bundle();
         bundle.putBoolean(FileManagerView.KEY_FILEMANAGER_DIALOG, true);
 
-        FileManagerView fileManagerView = new FileManagerView();
-        fileManagerView.setArguments(bundle);
+        fileManagerViewDialog = new FileManagerView();
+        fileManagerViewDialog.setArguments(bundle);
 
         fragmentManager.beginTransaction()
-                .replace(R.id.main_container, fileManagerView, TAG_FILEMANAGER)
+                .replace(R.id.main_container, fileManagerViewDialog, TAG_FILEMANAGER)
                 .addToBackStack(null)
                 .commit();
     }
@@ -127,6 +168,8 @@ public class MainActivity extends AppCompatActivity implements Router {
 
     @Override
     public void folderSelected(String folderPath) {
+        fileManagerViewDialog.onDestroy();
+        fileManagerViewDialog = null;
         fileManagerCallback.onSuccess(folderPath);
         fragmentManager.popBackStack();
     }
@@ -136,13 +179,27 @@ public class MainActivity extends AppCompatActivity implements Router {
         drawer.openDrawer(navigationView);
     }
 
+
+    private boolean checkFileManagerCanGoBack(@Nullable FileManagerView view) {
+        boolean returnVal = false;
+        if (view != null) {
+            if (view.isVisible()) {
+                Log.d(tag, "fileManager isVisible");
+                returnVal = view.goBack();
+                Log.d(tag, "returnVal is " + returnVal);
+            }
+        }
+
+        return !returnVal;
+    }
+
     private void lockNavView() {
-        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        navigationView.setVisibility(View.GONE);
+        //drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        //navigationView.setVisibility(View.GONE);
     }
 
     private void unlockNavView() {
-        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        navigationView.setVisibility(View.VISIBLE);
+        //drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        //navigationView.setVisibility(View.VISIBLE);
     }
 }

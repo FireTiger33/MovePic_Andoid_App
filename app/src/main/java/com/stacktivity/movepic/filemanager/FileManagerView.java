@@ -1,13 +1,10 @@
 package com.stacktivity.movepic.filemanager;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,7 +20,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -54,7 +50,6 @@ public class FileManagerView extends Fragment implements FileManagerContract.Vie
     private FileManagerContract.Presenter mPresenter;
     private Router router;
     private View createNewFolderDialogView;
-    private int PERMISSION_CODE = 1234;
 
     @Override
     public Context getViewContext() {
@@ -110,7 +105,7 @@ public class FileManagerView extends Fragment implements FileManagerContract.Vie
 
         configFilesView(mView);
 
-        checkPermission(mView);
+        mPresenter.getFilesAdapter().init();
 
         createNewFolderDialogView = inflater.inflate(R.layout.create_folder_dialog, null, false);
 
@@ -194,22 +189,7 @@ public class FileManagerView extends Fragment implements FileManagerContract.Vie
         showFolderPath(mPresenter.getCurrentDirectory());
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            mPresenter.getFilesAdapter().init();
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
 
-    private void checkPermission(View view) {
-        Log.d(tag, "checkPermission");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && ContextCompat.checkSelfPermission(view.getContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_DENIED) {
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_CODE);
-        }
-    }
 
     private void showCloseButton() {
         Button closeButton = mTopToolBar.findViewById(R.id.action_close);
@@ -239,7 +219,7 @@ public class FileManagerView extends Fragment implements FileManagerContract.Vie
         return (Toolbar) mTopToolBar;
     }
 
-    public boolean isParentDirectory() {
-        return !mPresenter.getFilesAdapter().goBack();
+    public boolean goBack() {
+        return mPresenter.getFilesAdapter().goBack();
     }
 }
