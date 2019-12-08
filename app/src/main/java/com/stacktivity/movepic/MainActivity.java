@@ -2,19 +2,15 @@ package com.stacktivity.movepic;
 
 
 import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 
@@ -24,7 +20,6 @@ import com.stacktivity.movepic.filemanager.FileManagerView;
 import com.stacktivity.movepic.movepic.MovePicContract;
 import com.stacktivity.movepic.movepic.MovePicView;
 
-import java.io.File;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements Router {
@@ -179,20 +174,6 @@ public class MainActivity extends AppCompatActivity implements Router {
     @Override
     public void showNavigationView() {
         drawer.openDrawer(navigationView);
-    }
-
-
-    private boolean checkFileManagerCanGoBack(@Nullable FileManagerView view) {
-        boolean returnVal = false;
-        if (view != null) {
-            if (view.isVisible()) {
-                Log.d(tag, "fileManager isVisible");
-                returnVal = view.goBack();
-                Log.d(tag, "returnVal is " + returnVal);
-            }
-        }
-
-        return !returnVal;
     }
 
     private void lockNavView() {
