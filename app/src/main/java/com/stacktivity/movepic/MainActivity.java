@@ -58,9 +58,7 @@ public class MainActivity extends AppCompatActivity implements Router {
         /*fragmentManager.beginTransaction()
                 .replace(R.id.main_activity, new MainView())
                 .commit();*/
-        checkPermission();
-
-        //initNavView();
+        boolean permissionGranted = checkPermission();
     }
 
     private void createFileManagerView() {
@@ -75,24 +73,28 @@ public class MainActivity extends AppCompatActivity implements Router {
         if (requestCode == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             //mPresenter.getFilesAdapter().init();
             createFileManagerView();
+            initNavView();
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    private void checkPermission() {
+    private boolean checkPermission() {
         Log.d(tag, "checkPermission");
         boolean returnVal = true;
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED) {
 
             returnVal = false;
         }
 
         String[] permissions = new String[1];
         permissions[0] = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-            requestPermissions(permissions,
-                    1
-            );
+        requestPermissions(permissions,
+                1
+        );
+
+        return returnVal;
+
     }
 
     private void initNavView() {
@@ -194,12 +196,12 @@ public class MainActivity extends AppCompatActivity implements Router {
     }
 
     private void lockNavView() {
-        //drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        //navigationView.setVisibility(View.GONE);
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        navigationView.setVisibility(View.GONE);
     }
 
     private void unlockNavView() {
-        //drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        //navigationView.setVisibility(View.VISIBLE);
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        navigationView.setVisibility(View.VISIBLE);
     }
 }
