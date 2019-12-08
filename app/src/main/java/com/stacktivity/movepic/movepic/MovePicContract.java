@@ -29,7 +29,7 @@ public interface MovePicContract {
         ImagePagerAdapter getImageAdapter();
 
 
-        void deleteCurrentImage();
+        void deleteCurrentImageFromAdapter();
         void deleteCurrentImageBuffered();
 
         /**

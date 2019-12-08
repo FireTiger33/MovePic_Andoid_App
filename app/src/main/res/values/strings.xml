@@ -15,4 +15,10 @@
     <string name="communicate">Communicate</string>
     <string name="AppName">MovePic</string>
     <string name="restore_image">restore last deleted image</string>
+    <string name="storage_not_found">Выбранная дирректория не доступна</string>
+    <string name="file_exists">Файл с таким именем уже существует</string>
+    <string name="source_file_not_found">SourceFile not found</string>
+    <string name="unexpected_error">Unexpected error</string>
+    <string name="file_delete_err">file cannot be deleted</string>
+    <string name="cant_create_file">File can\'t be created</string>
 </resources>

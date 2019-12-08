@@ -3,7 +3,6 @@ package com.stacktivity.movepic.movepic;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -13,13 +12,9 @@ import com.stacktivity.movepic.Router;
 import com.stacktivity.movepic.data.BindPaths;
 import com.stacktivity.movepic.filemanager.FileManagerContract;
 import com.stacktivity.movepic.movepic.binded_buttons.BindButtonsAdapter;
+import com.stacktivity.movepic.utils.FileWorker;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 
 
@@ -82,8 +77,8 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     }
 
     @Override
-    public void deleteCurrentImage() {
-        Log.d(tag, "deleteCurrentImage");
+    public void deleteCurrentImageFromAdapter() {
+        Log.d(tag, "deleteCurrentImageFromAdapter");
         int left = imageAdapter.deleteImage(getCurrentImageNum());
         if (left < 1) {
             mRouter.back();
@@ -128,9 +123,12 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     public void onBindButtonClick(int pos) {
         Log.d(tag, "onBindButtonClick: " + pos);
         File sourceFile = getCurrentImageFile();
-        boolean copyComplete = writeFileTo(sourceFile, bindButtonsAdapter.getPath(pos) + '/');
-        if (copyComplete) {
-            deleteCurrentImage();
+        FileWorker fileWorker = new FileWorker();
+        int moveErr = fileWorker.moveFile(sourceFile, bindButtonsAdapter.getPath(pos) + '/');
+        if (moveErr != 0) {
+            Toast.makeText(mView.getViewContext(), moveErr, Toast.LENGTH_SHORT).show();
+        } else {
+            deleteCurrentImageFromAdapter();
         }
     }
 
@@ -166,48 +164,5 @@ public class MovePicPresenter implements MovePicContract.Presenter {
 
             }
         });
-    }
-
-    private boolean writeFileTo(File sourceFile, String folderToSave) {
-        if (!Environment.getExternalStorageState().equals(
-                Environment.MEDIA_MOUNTED)) {
-            Log.d(tag, "SD-карта не доступна: " + Environment.getExternalStorageState());
-            return false;
-        }
-
-        return copyFile(sourceFile, new File(folderToSave + sourceFile.getName()));
-    }
-
-    private boolean copyFile(File sourceFile, File destFile) {
-        Log.d(tag, "copyFile");
-        if (!destFile.exists()) {
-            try {
-                if (!destFile.createNewFile()) {
-                    final Toast toast = Toast.makeText(mView.getViewContext(),
-                            "Невозможно переместить.\nФайл с таким именем уже существует",
-                            Toast.LENGTH_SHORT);
-                    toast.show();
-                    return false;
-                }
-            } catch (IOException e) {
-                Log.e(tag, "copyFile: Invalid destFile path");
-            }
-        }
-        Log.d(tag, "copyFrom: " + sourceFile.getPath() + " to "+ destFile.getPath());
-
-        try (FileChannel source = new FileInputStream(sourceFile).getChannel();
-             FileChannel destination = new FileOutputStream(destFile).getChannel()
-        ){
-            destination.transferFrom(source, 0, source.size());
-            Log.d(tag, "copyFile: finish");
-            return true;
-        } catch (FileNotFoundException e) {
-            Log.e(tag, "copyFile: SourceFile not found");
-            return false;
-        } catch (IOException e) {
-            Log.e(tag, "copyFile: sourceChannel was snap closed");
-            e.printStackTrace();
-            return false;
-        }
     }
 }

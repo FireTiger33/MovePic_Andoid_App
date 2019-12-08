@@ -49,7 +49,7 @@ class ImagePagerAdapter extends PagerAdapter {
         File file = new File(imagePath);
         file = file.getParentFile();
 
-        for (File currentFile: sortFiles(file.listFiles())) {
+        for (File currentFile : sortFiles(file.listFiles())) {
             String currentFilePath = currentFile.getPath();
             if (FileManagerPresenter.isImage(currentFilePath)) {
                 imagesPaths.add(currentFilePath);
@@ -101,7 +101,7 @@ class ImagePagerAdapter extends PagerAdapter {
 
     String getName(int pos) {
         String[] arr = imagesPaths.get(pos).split("[A-Za-z0-9.]*/");
-        return arr[arr.length-1];
+        return arr[arr.length - 1];
     }
 
     @Override
@@ -127,8 +127,10 @@ class ImagePagerAdapter extends PagerAdapter {
             public void onDoubleClick(View v, MotionEvent event) {
                 mPresenter.onImageDoubleClick(imageView, getBitmap(position), event.getX(), event.getY());
             }
+
             @Override
-            public void onOtherEvent(View v, MotionEvent event) { }
+            public void onOtherEvent(View v, MotionEvent event) {
+            }
         });
 
         imageView.setPadding(padding, 0, padding, 0);
@@ -144,12 +146,12 @@ class ImagePagerAdapter extends PagerAdapter {
                 public void onFinish() {
                     imageContainerSize = mPresenter.getSizeImageContainer();
                     imageView.setImageBitmap(getSimplifiedBitmap(imagesPaths.get(position),
-                            imageContainerSize[0]/2, imageContainerSize[1]/2));
+                            imageContainerSize[0] / 2, imageContainerSize[1] / 2));
                 }
             }.start();
         } else {
             imageView.setImageBitmap(getSimplifiedBitmap(imagesPaths.get(position),
-                    imageContainerSize[0]/2, imageContainerSize[1]/2));
+                    imageContainerSize[0] / 2, imageContainerSize[1] / 2));
         }
         container.addView(imageView, 0);
 
@@ -161,22 +163,23 @@ class ImagePagerAdapter extends PagerAdapter {
         (container).removeView((ImageView) object);
     }
 
-    @Override public int getItemPosition(@NonNull Object object){
+    @Override
+    public int getItemPosition(@NonNull Object object) {
         return PagerAdapter.POSITION_NONE;
     }
 
     /**
      * Removes the current image from the memory and the adapter itself.
+     *
      * @return number of remaining images in the folder
      */
     int deleteImage(int pos) {
         Log.d(tag, "deleteImage: " + pos);
         String path = imagesPaths.get(pos);
-        if (new File(path).delete()) {
-            imagesPaths.remove(pos);
-            Log.d(tag, "deleteImage: Image " + path + " deleted");
-        }
+        imagesPaths.remove(pos);
+        Log.d(tag, "deleteImage: Image " + path + " deleted");
         notifyDataSetChanged();
+
 
         return imagesPaths.size();
     }
@@ -191,6 +194,7 @@ class ImagePagerAdapter extends PagerAdapter {
     /**
      * Removes the current image from the memory and the adapter itself.
      * Saves Bitmap and path to buffer[2] for possible recovery.
+     *
      * @return number of remaining images in the folder
      */
     int deleteImageBuffered(int pos) {
@@ -203,6 +207,7 @@ class ImagePagerAdapter extends PagerAdapter {
     /**
      * Experimental function to restore the last deleted image from RAM.
      * File recovery is performed in one of two formats: JPEG or PNG.
+     *
      * @return 0 if success; 1 if error; 2 if buffer is empty
      */
     int restoreLastDeletedImage() {
@@ -212,19 +217,19 @@ class ImagePagerAdapter extends PagerAdapter {
             Log.d(tag, "Нечего восстанавливать");
             return 2;
         }
-        Log.d(tag, fName+ imagesPathBuffer[1]);
+        Log.d(tag, fName + imagesPathBuffer[1]);
         File file = new File(imagesPathBuffer[1]);
         OutputStream fOut;
         try {
             fOut = new FileOutputStream(file);
-            String fileFormat = imagesPathBuffer[1].substring(imagesPathBuffer[1].lastIndexOf(".")+1);
+            String fileFormat = imagesPathBuffer[1].substring(imagesPathBuffer[1].lastIndexOf(".") + 1);
             Log.d(tag, "image format is: " + fileFormat);
-            Bitmap.CompressFormat compressFormat = fileFormat.equalsIgnoreCase("PNG")?
-                    Bitmap.CompressFormat.PNG:
+            Bitmap.CompressFormat compressFormat = fileFormat.equalsIgnoreCase("PNG") ?
+                    Bitmap.CompressFormat.PNG :
                     Bitmap.CompressFormat.JPEG;
             imagesBitmapBuffer[1].compress(compressFormat, 100, fOut);
             fOut.flush();
-            Log.d(tag, fName +"complete");
+            Log.d(tag, fName + "complete");
             fOut.close();
 
             // Add image to adapter
