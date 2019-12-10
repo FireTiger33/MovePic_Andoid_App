@@ -1,39 +1,174 @@
 package com.stacktivity.movepic.data;
 
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Log;
+
+import com.google.gson.Gson;
 import com.stacktivity.movepic.movepic.MovePicContract;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.List;
+
+import static com.stacktivity.movepic.utils.FileWorker.deleteFile;
+import static com.stacktivity.movepic.utils.FileWorker.isImage;
+import static com.stacktivity.movepic.utils.FileWorker.sortFiles;
 
 public class MovePicRepository implements MovePicContract.Repository {
+    private final String tag = MovePicRepository.class.getSimpleName();
 
-    private ArrayList<String> paths;
+    private SharedPreferences mPreferences;
+    private static final String MOVEPICVIEW_PREFERENCES_BINDED_PATHS = "myBondedPaths";
 
-    public MovePicRepository(List<String> paths) {
-        this.paths = new ArrayList<>(paths);
-    }
 
-    public MovePicRepository() {
-        this.paths = new ArrayList<>();
-    }
+    private ArrayList<String> pathsBondedButtons;
 
-    @Override
-    public ArrayList<String> getAllPaths() {
-        return paths;
+    private Bitmap[] imagesBitmapBuffer = new Bitmap[2];
+    private String[] imagesPathBuffer = new String[2];
+
+    private ArrayList<String> imagesPaths = new ArrayList<>();
+
+
+    public MovePicRepository(SharedPreferences preferences, String pathOpenedImage) {
+        mPreferences = preferences;
+        loadPathsBondedButtons();
+        loadImagePathsInFolder(pathOpenedImage);
     }
 
     @Override
     public String getBindPath(int pos) {
-        return paths.get(pos);
+        return pathsBondedButtons.get(pos);
     }
 
     @Override
     public int getBindButtonsCount() {
-        return paths.size();
+        return pathsBondedButtons.size();
     }
 
     @Override
-    public void addNewPath(String path) {
-        paths.add(path);
+    public void addNewBindPath(String path) {
+        pathsBondedButtons.add(path);
+        saveChangedData();
+
+    }
+
+    @Override
+    public String getPathImage(int pos) {
+        return imagesPaths.get(pos);
+    }
+
+    @Override
+    public int getCountImage() {
+        return imagesPaths.size();
+    }
+
+    @Override
+    public int deleteImage(int pos) {
+        Log.d(tag, "deleteImage: " + pos);
+        if (deleteFile(imagesPaths.get(pos))) {
+            imagesPaths.remove(pos);
+        }
+
+        return imagesPaths.size();
+    }
+
+    @Override
+    public int deleteImageBuffered(int pos) {
+        Log.d(tag, "deleteImageBuffered: " + pos);
+        saveImageToBuffer(pos);
+
+        return deleteImage(pos);
+    }
+
+    @Override
+    public int restoreLastDeletedImage(int currentImageNum) {
+        final String fName = "restoreLastDeletedImage: ";
+
+        if (imagesPathBuffer[1] == null) {
+            Log.d(tag, "Нечего восстанавливать");
+            return 2;
+        }
+        Log.d(tag, fName + imagesPathBuffer[1]);
+        File file = new File(imagesPathBuffer[1]);
+        OutputStream fOut;
+        try {
+            fOut = new FileOutputStream(file);
+            String fileFormat = imagesPathBuffer[1].substring(imagesPathBuffer[1].lastIndexOf(".") + 1);
+            Log.d(tag, "image format is: " + fileFormat);
+            Bitmap.CompressFormat compressFormat = fileFormat.equalsIgnoreCase("PNG") ?
+                    Bitmap.CompressFormat.PNG :
+                    Bitmap.CompressFormat.JPEG;
+            imagesBitmapBuffer[1].compress(compressFormat, 100, fOut);
+            fOut.flush();
+            Log.d(tag, fName + "complete");
+            fOut.close();
+
+            // Add image to adapter
+            imagesPaths.add(currentImageNum, imagesPathBuffer[1]);
+
+            deleteLastImageFromBuffer();
+
+            return 0;
+//            MediaStore.Images.Media.insertImage(getContentResolver(), file.getAbsolutePath(), file.getName(),  file.getName()); // регистрация в фотоальбоме
+        } catch (FileNotFoundException e) {
+            Log.d(tag, fName + "File could not be created.");
+            e.printStackTrace();
+            return 1;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 1;
+        }
+    }
+
+    private void loadPathsBondedButtons() {
+        if (mPreferences.contains(MOVEPICVIEW_PREFERENCES_BINDED_PATHS)) {
+            String bindPathsJSON = mPreferences.getString(MOVEPICVIEW_PREFERENCES_BINDED_PATHS, null);
+            BindPaths bindPaths = new Gson().fromJson(bindPathsJSON, BindPaths.class);
+            pathsBondedButtons = new ArrayList<>(bindPaths.getPaths());
+        } else {
+            pathsBondedButtons = new ArrayList<>();
+        }
+    }
+
+    private void loadImagePathsInFolder(String pathOpenedImage) {
+        File file = new File(pathOpenedImage);
+        file = file.getParentFile();
+
+        for (File currentFile : sortFiles(file.listFiles())) {
+            String currentFilePath = currentFile.getPath();
+            if (isImage(currentFilePath)) {
+                imagesPaths.add(currentFilePath);
+            }
+        }
+    }
+
+    private void saveChangedData() {
+        BindPaths bindPaths = new BindPaths(MOVEPICVIEW_PREFERENCES_BINDED_PATHS, pathsBondedButtons);
+        String bindPathsJSON = new Gson().toJson(bindPaths);
+        boolean success = false;
+        while (!success) {
+            success = mPreferences.edit()
+                    .putString(MOVEPICVIEW_PREFERENCES_BINDED_PATHS, bindPathsJSON)
+                    .commit();
+        }
+    }
+
+    private void saveImageToBuffer(int pos) {
+        imagesBitmapBuffer[0] = imagesBitmapBuffer[1];
+        imagesBitmapBuffer[1] = BitmapFactory.decodeFile(imagesPaths.get(pos));
+        imagesPathBuffer[0] = imagesPathBuffer[1];
+        imagesPathBuffer[1] = imagesPaths.get(pos);
+    }
+
+    private void deleteLastImageFromBuffer() {
+        imagesBitmapBuffer[1] = imagesBitmapBuffer[0];
+        imagesBitmapBuffer[0] = null;
+        imagesPathBuffer[1] = imagesPathBuffer[0];
+        imagesPathBuffer[0] = null;
     }
 }

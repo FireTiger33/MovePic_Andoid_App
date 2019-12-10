@@ -2,6 +2,8 @@ package com.stacktivity.movepic;
 
 
 import android.Manifest;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,9 +17,11 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.navigation.NavigationView;
+import com.stacktivity.movepic.data.MovePicRepository;
 import com.stacktivity.movepic.filemanager.FileManagerContract;
 import com.stacktivity.movepic.filemanager.FileManagerView;
 import com.stacktivity.movepic.movepic.MovePicContract;
+import com.stacktivity.movepic.movepic.MovePicPresenter;
 import com.stacktivity.movepic.movepic.MovePicView;
 
 import java.util.Objects;
@@ -40,6 +44,8 @@ public class MainActivity extends AppCompatActivity implements Router {
     private FileManagerView fileManagerView;
     private FileManagerView fileManagerViewDialog;
 
+    MovePicPresenter movePicPresenter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements Router {
                 .replace(R.id.main_activity, new MainView())
                 .commit();*/
         boolean permissionGranted = checkPermission();
+        // TODO AlertDialog if permission denied
     }
 
     private void createFileManagerView() {
@@ -125,11 +132,16 @@ public class MainActivity extends AppCompatActivity implements Router {
         lockNavView();
 
         Bundle args = new Bundle();
-        args.putString(MovePicContract.TAG_PATHPIC, pathPic);
-        args.putInt(MovePicContract.TAG_ITEM_NUM, itemNum);
+        args.putInt(MovePicContract.TAG_ITEM_NUM, itemNum);  // TODO remove
 
         MovePicView movePicView = new MovePicView();
         movePicView.setArguments(args);
+
+        String MOVEPIC_PREFERENCES = "MovePicPreferences";
+        SharedPreferences preferences = getSharedPreferences(MOVEPIC_PREFERENCES, Context.MODE_PRIVATE);
+        MovePicRepository repository = new MovePicRepository(preferences, pathPic);
+
+        movePicPresenter = new MovePicPresenter(movePicView, repository, this);
 
         mToolBar.setVisibility(View.VISIBLE);
 

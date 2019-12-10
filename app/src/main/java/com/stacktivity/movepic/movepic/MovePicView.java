@@ -23,6 +23,7 @@ import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -32,7 +33,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import com.stacktivity.movepic.R;
-import com.stacktivity.movepic.Router;
 import com.stacktivity.movepic.controllers.OnDoubleTouchListener;
 
 import java.util.Objects;
@@ -91,8 +91,6 @@ public class MovePicView extends Fragment implements MovePicContract.View {
         Log.d(tag, "DisplayWidth = " + mDisplayWidth + ", DisplayHeight = " + mDisplayHeight);
         Bundle args = getArguments();
         if (args != null) {
-            String pathFirstIMG = args.getString(MovePicContract.TAG_PATHPIC);
-            mPresenter = new MovePicPresenter(this, (Router) getActivity(), pathFirstIMG);
             firstImageNum = args.getInt(MovePicContract.TAG_ITEM_NUM);
         } else {
             Log.e(tag, "can't get pathIMG");
@@ -129,8 +127,18 @@ public class MovePicView extends Fragment implements MovePicContract.View {
     }
 
     @Override
-    public Context getViewContext() {
-        return getContext();
+    public void setPresenter(MovePicContract.Presenter presenter) {
+        mPresenter = presenter;
+    }
+
+    @Override
+    public void showToast(int resId) {
+        Toast.makeText(getContext(), resId, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showToast(String msg) {
+        Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
     @Override

@@ -1,15 +1,10 @@
 package com.stacktivity.movepic.movepic;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
-import com.google.gson.Gson;
 import com.stacktivity.movepic.Router;
-import com.stacktivity.movepic.data.BindPaths;
 import com.stacktivity.movepic.data.MovePicRepository;
 import com.stacktivity.movepic.filemanager.FileManagerContract;
 import com.stacktivity.movepic.utils.FileWorker;
@@ -26,44 +21,35 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     private ImagePagerAdapter imageAdapter;
     final private BindButtonsAdapter bindButtonsAdapter;
 
-    private static final String MOVEPICVIEW_PREFERENCES = "MovePicViewPreferences";
-    private static final String MOVEPICVIEW_PREFERENCES_BINDED_PATHS = "myBindedPaths";
-    private SharedPreferences mPreferences;
-
-    MovePicPresenter(MovePicContract.View view, Router router, String pathFirstIMG) {
+    public MovePicPresenter(MovePicContract.View view, MovePicRepository repository, Router router) {
         Log.d(tag, "constructor");
         mView = view;
+        mView.setPresenter(this);
+        this.repository = repository;
         mRouter = router;
-        imageAdapter = new ImagePagerAdapter(pathFirstIMG, this);
+        imageAdapter = new ImagePagerAdapter(this);
         bindButtonsAdapter = new BindButtonsAdapter(this);
-        mPreferences = mView.getViewContext().getSharedPreferences(MOVEPICVIEW_PREFERENCES, Context.MODE_PRIVATE);
-        if (mPreferences.contains(MOVEPICVIEW_PREFERENCES_BINDED_PATHS)) {
-            String bindPathsJSON = mPreferences.getString(MOVEPICVIEW_PREFERENCES_BINDED_PATHS, null);
-            BindPaths bindPaths = new Gson().fromJson(bindPathsJSON, BindPaths.class);
-            repository = new MovePicRepository(bindPaths.getPaths());
-        } else {
-            repository = new MovePicRepository();
-        }
     }
 
     @Override
-    public File getCurrentImageFile() {
-        return imageAdapter.getFile(getCurrentImageNum());
-    }
-
-    @Override
-    public Bitmap getCurrentImageBitmap() {
-        return imageAdapter.getBitmap(mView.getCurrentItemNum());
+    public String getImagePath(int num) {
+        return repository.getPathImage(num);
     }
 
     @Override
     public String getCurrentImageName() {
-        return imageAdapter.getName(mView.getCurrentItemNum());
+        String[] arr = getImagePath(mView.getCurrentItemNum()).split("[A-Za-z0-9.]*/");
+        return arr[arr.length - 1];
     }
 
     @Override
     public int getCurrentImageNum() {
         return mView.getCurrentItemNum();
+    }
+
+    @Override
+    public int getCountImages() {
+        return repository.getCountImage();
     }
 
     @Override
@@ -76,59 +62,53 @@ public class MovePicPresenter implements MovePicContract.Presenter {
         return imageAdapter;
     }
 
-    @Override
-    public void deleteCurrentImageFromAdapter() {
-        Log.d(tag, "deleteCurrentImageFromAdapter");
-        int left = imageAdapter.deleteImage(getCurrentImageNum());
+    private void deleteCurrentImage() {
+        Log.d(tag, "deleteCurrentImage");
+        int left = repository.deleteImage(getCurrentImageNum());
         if (left < 1) {
             mRouter.back();
+        } else {
+            imageAdapter.notifyDataSetChanged();
         }
     }
 
     @Override
     public void deleteCurrentImageBuffered() {
         Log.d(tag, "deleteCurrentImageBuffered");
-        int left = imageAdapter.deleteImageBuffered(getCurrentImageNum());
+        int left = repository.deleteImageBuffered(getCurrentImageNum());
         if (left < 1) {
             mRouter.back();
+        } else {
+            imageAdapter.notifyDataSetChanged();
         }
     }
 
     @Override
     public void onButtonRestoreImageClicked() {
-        int res = imageAdapter.restoreLastDeletedImage();
-        final Toast toast;
+        int res = repository.restoreLastDeletedImage(getCurrentImageNum());
         switch (res) {
-            case 0: toast = Toast.makeText(mView.getViewContext(),
-                    "Picture successfully restored",
-                    Toast.LENGTH_SHORT);
+            case 0: mView.showToast("Picture successfully restored");
+                    imageAdapter.notifyDataSetChanged();
                     break;
-            case 1: toast = Toast.makeText(mView.getViewContext(),
-                    "Recovery error",
-                    Toast.LENGTH_SHORT);
+            case 1: mView.showToast("Recovery error");
                     break;
-            case 2: toast = Toast.makeText(mView.getViewContext(),
-                    "Buffer is empty",
-                    Toast.LENGTH_SHORT);
+            case 2: mView.showToast("Buffer is empty");
                     break;
-            default: toast = Toast.makeText(mView.getViewContext(),
-                    "Unknown error",
-                    Toast.LENGTH_SHORT);
+            default: mView.showToast("Unknown error");
                     break;
         }
-        toast.show();
     }
 
     @Override
     public void onBindButtonClick(int pos) {
         Log.d(tag, "onBindButtonClick: " + pos);
-        File sourceFile = getCurrentImageFile();
+        File sourceFile = new File(getImagePath(getCurrentImageNum()));
         FileWorker fileWorker = new FileWorker();
-        int moveErr = fileWorker.moveFile(sourceFile, repository.getBindPath(pos) + '/');
+        int moveErr = fileWorker.copyFile(sourceFile, repository.getBindPath(pos) + '/');
         if (moveErr != 0) {
-            Toast.makeText(mView.getViewContext(), moveErr, Toast.LENGTH_SHORT).show();
+            mView.showToast(moveErr);
         } else {
-            deleteCurrentImageFromAdapter();
+            deleteCurrentImage();
         }
     }
 
@@ -147,17 +127,8 @@ public class MovePicPresenter implements MovePicContract.Presenter {
         mRouter.showFileManagerDialog(new FileManagerContract.Callback() {
             @Override
             public void onSuccess(String folderPath) {
-                repository.addNewPath(folderPath);
+                repository.addNewBindPath(folderPath);
                 bindButtonsAdapter.notifyItemInserted(repository.getBindButtonsCount() - 1);
-
-                BindPaths bindPaths = new BindPaths(MOVEPICVIEW_PREFERENCES_BINDED_PATHS, repository.getAllPaths());
-                String bindPathsJSON = new Gson().toJson(bindPaths);
-                boolean success = false;
-                while (!success) {
-                    success = mPreferences.edit()
-                            .putString(MOVEPICVIEW_PREFERENCES_BINDED_PATHS, bindPathsJSON)
-                            .commit();
-                }
             }
 
             @Override
