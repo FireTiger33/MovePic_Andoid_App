@@ -1,7 +1,6 @@
 package com.stacktivity.movepic.movepic;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.CountDownTimer;
@@ -32,7 +31,6 @@ class ImagePagerAdapter extends PagerAdapter {
     final private String tag = ImagePagerAdapter.class.getName();
 
     final private MovePicContract.Presenter mPresenter;
-    final private Context mContext;
 
     private int[] imageContainerSize;
 
@@ -42,9 +40,8 @@ class ImagePagerAdapter extends PagerAdapter {
     private List<String> imagesPaths = new ArrayList<>();
 
 
-    ImagePagerAdapter(Context context, String imagePath, MovePicContract.Presenter presenter) {
+    ImagePagerAdapter(String imagePath, MovePicContract.Presenter presenter) {
         mPresenter = presenter;
-        mContext = context;
 
         File file = new File(imagePath);
         file = file.getParentFile();
@@ -119,7 +116,7 @@ class ImagePagerAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(@NonNull ViewGroup container, final int position) {
         Log.d(tag, "instantiateItem");
-        final ImageView imageView = new ImageView(mContext);
+        final ImageView imageView = new ImageView(container.getContext());
         int padding = 4;
 
         imageView.setOnTouchListener(new OnDoubleTouchListener() {

@@ -92,7 +92,7 @@ public class MovePicView extends Fragment implements MovePicContract.View {
         Bundle args = getArguments();
         if (args != null) {
             String pathFirstIMG = args.getString(MovePicContract.TAG_PATHPIC);
-            mPresenter = new MovePicPresenter(this, getContext(), (Router) getActivity(), pathFirstIMG);
+            mPresenter = new MovePicPresenter(this, (Router) getActivity(), pathFirstIMG);
             firstImageNum = args.getInt(MovePicContract.TAG_ITEM_NUM);
         } else {
             Log.e(tag, "can't get pathIMG");

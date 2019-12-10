@@ -31,13 +31,13 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     private static final String MOVEPICVIEW_PREFERENCES_BINDED_PATHS = "myBindedPaths";
     private SharedPreferences mPreferences;
 
-    MovePicPresenter(MovePicContract.View view, Context context, Router router, String pathFirstIMG) {
+    MovePicPresenter(MovePicContract.View view, Router router, String pathFirstIMG) {
         Log.d(tag, "constructor");
         mView = view;
         mRouter = router;
-        imageAdapter = new ImagePagerAdapter(context, pathFirstIMG, this);
+        imageAdapter = new ImagePagerAdapter(pathFirstIMG, this);
         bindPathsList = new ArrayList<>();
-        bindButtonsAdapter = new BindButtonsAdapter(this, context, router);
+        bindButtonsAdapter = new BindButtonsAdapter(this);
         mPreferences = mView.getViewContext().getSharedPreferences(MOVEPICVIEW_PREFERENCES, Context.MODE_PRIVATE);
         if (mPreferences.contains(MOVEPICVIEW_PREFERENCES_BINDED_PATHS)) {
             String bindPathsJSON = mPreferences.getString(MOVEPICVIEW_PREFERENCES_BINDED_PATHS, null);
