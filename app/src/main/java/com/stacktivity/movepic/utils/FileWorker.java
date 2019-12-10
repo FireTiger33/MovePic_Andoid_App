@@ -1,8 +1,10 @@
 package com.stacktivity.movepic.utils;
 
 
+import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import com.stacktivity.movepic.R;
 
@@ -12,9 +14,14 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * Deals with standard work with files
+ * 1) Copy/move files
+ * 2) Sort files
+ * 3) Check image format
  */
 public class FileWorker {
     private static final String tag = FileWorker.class.getSimpleName();
@@ -33,25 +40,37 @@ public class FileWorker {
         return R.string.storage_not_found;
     }
 
-    /**
-     * Safely move file
-     * @param sourceFile source file
-     * @param folderToSave new path to place
-     * @return 0 for success result else err id
-     */
-    public int moveFile(File sourceFile, String folderToSave) {
-        if (checkDirectoryAccess()) {
-            int returnVal;
-            if ((returnVal = copyFile(sourceFile, new File(folderToSave + sourceFile.getName()))) == 0) {
-                if (sourceFile.delete()) {
-                    return 0;
-                }
-                return R.string.file_delete_err;
-            } else return returnVal;
 
+    static public boolean deleteFile(String path) {
+        return new File(path).delete();
+    }
+
+    static public boolean isImage(String filePath) {
+        final String extension = MimeTypeMap
+                .getFileExtensionFromUrl(Uri.parse(filePath).toString());
+        final String mimeType = MimeTypeMap.getSingleton()
+                .getMimeTypeFromExtension(extension);
+
+        Log.d(tag, "extension: " + extension);
+        Log.d(tag, "mimeType: " + mimeType);
+
+        return mimeType != null && mimeType.contains("image");
+    }
+
+    static public File[] sortFiles(final File[] files) {
+        if (files == null) {
+            return null;
         }
+        Arrays.sort(files, new Comparator<File>() {
+            @Override
+            public int compare(File f1, File f2) {
+                if (f1.isDirectory() && !f2.isDirectory()) return -1;
+                if (f2.isDirectory() && !f1.isDirectory()) return 1;
+                return f1.getName().compareTo(f2.getName());
+            }
+        });
 
-        return R.string.storage_not_found;
+        return files;
     }
 
     /**

@@ -16,7 +16,9 @@ import com.stacktivity.movepic.Router;
 
 import java.io.File;
 
-import static com.stacktivity.movepic.filemanager.FileManagerPresenter.sortFiles;
+import static com.stacktivity.movepic.utils.FileWorker.isImage;
+import static com.stacktivity.movepic.utils.FileWorker.sortFiles;
+
 
 /**
  * Адаптер для {@link RecyclerView}, отображающий список файлов в указанной директории.
@@ -119,7 +121,7 @@ class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> implements FileM
         Log.d(tag, "onClickImage");
         int pos = 0;
         for (File currentFile: files) {
-            if (FileManagerPresenter.isImage(currentFile.getPath())) {
+            if (isImage(currentFile.getPath())) {
                 if (file == currentFile) {
                     break;
                 } else {

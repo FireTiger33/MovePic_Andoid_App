@@ -2,10 +2,7 @@ package com.stacktivity.movepic.filemanager;
 
 import android.annotation.SuppressLint;
 import android.graphics.Typeface;
-import android.net.Uri;
-import android.util.Log;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,8 +11,9 @@ import com.stacktivity.movepic.R;
 
 import java.io.File;
 
+import static com.stacktivity.movepic.utils.FileWorker.isImage;
+
 final class FileViewHolder extends RecyclerView.ViewHolder {
-    static final private String tag = FileViewHolder.class.getName();
 
     private final TextView filename;
     private FileManagerView.OnClickFileManagerItem clickManager;
@@ -37,7 +35,7 @@ final class FileViewHolder extends RecyclerView.ViewHolder {
                 if (file.isDirectory()) {
                     clickManager.onClickDirectory(file);
                 } else {
-                    if (FileManagerPresenter.isImage(file.getPath())) {
+                    if (isImage(file.getPath())) {
                         clickManager.onClickImage(file, getAdapterPosition());
                     }
                 }
