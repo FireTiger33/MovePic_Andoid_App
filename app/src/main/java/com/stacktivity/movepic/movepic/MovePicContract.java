@@ -3,9 +3,8 @@ package com.stacktivity.movepic.movepic;
 import android.content.Context;
 import android.graphics.Bitmap;
 
-import com.stacktivity.movepic.movepic.binded_buttons.BindButtonsAdapter;
-
 import java.io.File;
+import java.util.ArrayList;
 
 public interface MovePicContract {
     String TAG_PATHPIC = "PathPic";
@@ -46,5 +45,35 @@ public interface MovePicContract {
         int[] getSizeImageContainer();
 
         void addBindButton();
+
+
+        // Repositories methods
+
+        /**
+         * Retrieve saved path from repository and passes to ViewHolder
+         * @param pos button position
+         * @param viewHolder button viewHolder}
+         */
+        void onBindRepositoryPathAtBindButton(int pos, BindButtonViewHolder viewHolder);
+
+        int getBindButtonsCount();
+    }
+
+    interface Repository {
+
+        ArrayList<String> getAllPaths();
+        /**
+         * @param pos num in list
+         * @return path for BindButton
+         */
+        String getBindPath(int pos);
+
+        int getBindButtonsCount();
+
+        /**
+         * Add path to end of list
+         */
+        void addNewPath(String path);
+
     }
 }

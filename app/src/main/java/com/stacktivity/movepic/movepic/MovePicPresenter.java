@@ -10,22 +10,21 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.stacktivity.movepic.Router;
 import com.stacktivity.movepic.data.BindPaths;
+import com.stacktivity.movepic.data.MovePicRepository;
 import com.stacktivity.movepic.filemanager.FileManagerContract;
-import com.stacktivity.movepic.movepic.binded_buttons.BindButtonsAdapter;
 import com.stacktivity.movepic.utils.FileWorker;
 
 import java.io.File;
-import java.util.ArrayList;
 
 
 public class MovePicPresenter implements MovePicContract.Presenter {
     final private String tag = MovePicPresenter.class.getName();
 
     final private MovePicContract.View mView;
+    private MovePicContract.Repository repository;
     final private Router mRouter;
     private ImagePagerAdapter imageAdapter;
     final private BindButtonsAdapter bindButtonsAdapter;
-    private ArrayList<String> bindPathsList;
 
     private static final String MOVEPICVIEW_PREFERENCES = "MovePicViewPreferences";
     private static final String MOVEPICVIEW_PREFERENCES_BINDED_PATHS = "myBindedPaths";
@@ -36,13 +35,14 @@ public class MovePicPresenter implements MovePicContract.Presenter {
         mView = view;
         mRouter = router;
         imageAdapter = new ImagePagerAdapter(pathFirstIMG, this);
-        bindPathsList = new ArrayList<>();
         bindButtonsAdapter = new BindButtonsAdapter(this);
         mPreferences = mView.getViewContext().getSharedPreferences(MOVEPICVIEW_PREFERENCES, Context.MODE_PRIVATE);
         if (mPreferences.contains(MOVEPICVIEW_PREFERENCES_BINDED_PATHS)) {
             String bindPathsJSON = mPreferences.getString(MOVEPICVIEW_PREFERENCES_BINDED_PATHS, null);
             BindPaths bindPaths = new Gson().fromJson(bindPathsJSON, BindPaths.class);
-            bindButtonsAdapter.restorePaths(bindPaths.getPaths());
+            repository = new MovePicRepository(bindPaths.getPaths());
+        } else {
+            repository = new MovePicRepository();
         }
     }
 
@@ -124,7 +124,7 @@ public class MovePicPresenter implements MovePicContract.Presenter {
         Log.d(tag, "onBindButtonClick: " + pos);
         File sourceFile = getCurrentImageFile();
         FileWorker fileWorker = new FileWorker();
-        int moveErr = fileWorker.moveFile(sourceFile, bindButtonsAdapter.getPath(pos) + '/');
+        int moveErr = fileWorker.moveFile(sourceFile, repository.getBindPath(pos) + '/');
         if (moveErr != 0) {
             Toast.makeText(mView.getViewContext(), moveErr, Toast.LENGTH_SHORT).show();
         } else {
@@ -147,9 +147,10 @@ public class MovePicPresenter implements MovePicContract.Presenter {
         mRouter.showFileManagerDialog(new FileManagerContract.Callback() {
             @Override
             public void onSuccess(String folderPath) {
-                bindButtonsAdapter.addElement(folderPath);
-                bindPathsList.add(folderPath);
-                BindPaths bindPaths = new BindPaths(MOVEPICVIEW_PREFERENCES_BINDED_PATHS, bindPathsList);
+                repository.addNewPath(folderPath);
+                bindButtonsAdapter.notifyItemInserted(repository.getBindButtonsCount() - 1);
+
+                BindPaths bindPaths = new BindPaths(MOVEPICVIEW_PREFERENCES_BINDED_PATHS, repository.getAllPaths());
                 String bindPathsJSON = new Gson().toJson(bindPaths);
                 boolean success = false;
                 while (!success) {
@@ -164,5 +165,15 @@ public class MovePicPresenter implements MovePicContract.Presenter {
 
             }
         });
+    }
+
+    @Override
+    public void onBindRepositoryPathAtBindButton(int pos, BindButtonViewHolder viewHolder) {
+        viewHolder.bind(repository.getBindPath(pos), pos);
+    }
+
+    @Override
+    public int getBindButtonsCount() {
+        return repository.getBindButtonsCount();
     }
 }

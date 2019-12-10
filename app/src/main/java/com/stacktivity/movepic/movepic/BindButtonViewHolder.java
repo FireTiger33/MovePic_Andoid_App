@@ -1,4 +1,4 @@
-package com.stacktivity.movepic.movepic.binded_buttons;
+package com.stacktivity.movepic.movepic;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;
@@ -8,17 +8,16 @@ import android.view.View;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.stacktivity.movepic.R;
-import com.stacktivity.movepic.movepic.MovePicContract;
 
 
-class BindButtonViewHolder extends BaseButtonViewHolder {
+class BindButtonViewHolder extends RecyclerView.ViewHolder{
     final private String tag = BindButtonViewHolder.class.getName();
 
     final private MovePicContract.Presenter mPresenter;
     final private Button mButton;
-    private String mPath;
     private String mShortPath;
     private int mPos;
     private long startButtonPressTime;
@@ -57,8 +56,7 @@ class BindButtonViewHolder extends BaseButtonViewHolder {
 
     void bind(String path, int pos) {
         Log.d(tag, "bind");
-        mPath = path;
-        mShortPath = ".." + mPath.split("/[A-Za-z0-9]*", 4)[3];  //TODO dynamic limit
+        mShortPath = ".." + path.split("/[A-Za-z0-9]*", 4)[3];  // TODO dynamic limit
         Log.d(tag, "bind: shortPath = " + mShortPath);
         mPos = pos;
         if (mButton.getText() == "") {
