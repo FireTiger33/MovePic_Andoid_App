@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/TopActionBar"
-    android:layout_width="match_parent"
-    android:layout_height="?attr/actionBarSize"
-    android:background="@color/colorPrimary"
+    style="@style/Toolbar"
     android:gravity="center_vertical">
 
     <Button
@@ -31,4 +29,4 @@
         android:singleLine="true"
         android:ellipsize="start" />
 
-</LinearLayout>
+</androidx.appcompat.widget.Toolbar>

@@ -1,8 +1,5 @@
 package com.stacktivity.movepic.filemanager;
 
-import android.content.Context;
-import android.os.Environment;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,129 +9,58 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.stacktivity.movepic.R;
-import com.stacktivity.movepic.Router;
-
-import java.io.File;
-
-import static com.stacktivity.movepic.utils.FileWorker.isImage;
-import static com.stacktivity.movepic.utils.FileWorker.sortFiles;
 
 
 /**
  * Адаптер для {@link RecyclerView}, отображающий список файлов в указанной директории.
  * Начинает обзор с корня внешнего хранилища. Поддерживает навигацию по директориям.
  */
-class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> implements FileManagerView.OnClickFileManagerItem{
+class FilesAdapter extends RecyclerView.Adapter<FileViewHolder> {
     final private String tag = FilesAdapter.class.getName();
 
     final private short TYPE_FILE = 0;
     final private short TYPE_FOLDER = 1;
 
+    private final FileManagerView.OnClickFileListener mClickFileListener;
     private final FileManagerContract.Presenter mPresenter;
-    private final Router router;
-    private final LayoutInflater layoutInflater;
-    private File initialFile;
 
-    private File[] files;
-    private File currentFile;
-
-    private FileManagerView.OnClickFileManagerItem onClickFileItem = this;
-
-    FilesAdapter(final FileManagerContract.Presenter presenter, final Context context, Router router) {
+    FilesAdapter(final FileManagerContract.Presenter presenter,
+                 final FileManagerView.OnClickFileListener clickFileListener) {
         mPresenter = presenter;
-        layoutInflater = LayoutInflater.from(context);
-        this.router = router;
-        init();
-    }
-
-    void init() {
-        initialFile = Environment.getExternalStorageDirectory();
-        setDirectory(initialFile);
-    }
-
-    void restoreDirectory(String path) {
-        setDirectory(new File(path));
-    }
-
-    void refresh() {
-        restoreDirectory(getCurrentDirectory());
-    }
-
-    private void setDirectory(final File file) {
-        this.currentFile = file;
-        this.files = file.listFiles();
-        sortFiles(this.files);
-        notifyDataSetChanged();
-    }
-
-    boolean goBack() {
-        if (currentFile.equals(Environment.getExternalStorageDirectory())) {
-            return false;
-        }
-        File parent = currentFile.getParentFile();
-        if (parent != null) {
-            mPresenter.onDirectoryChanged(parent.getPath());
-            setDirectory(parent);
-            return true;
-        }
-        return false;
+        mClickFileListener = clickFileListener;
     }
 
     @NonNull
     @Override
     public FileViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-//        Log.d(tag, "onCreateViewHolder: viewType = " + viewType);
         View view;
         if (viewType == TYPE_FOLDER) {
-            view = layoutInflater.inflate(R.layout.folder_item, parent, false);
+            view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.folder_item, parent, false);
         } else {
-            view = layoutInflater.inflate(R.layout.file_item, parent, false);
+            view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.file_item, parent, false);
         }
-        return new FileViewHolder(view, onClickFileItem);
+        return new FileViewHolder(view, mClickFileListener);
     }
 
     @Override
     public void onBindViewHolder(@NonNull FileViewHolder holder, int position) {
-        holder.bind(files[position]);
+        holder.bind(mPresenter.getFileInCurrentDirectory(position));
     }
 
     @Override
     public int getItemCount() {
-        return files != null ? files.length : 0;
+        Log.d(tag, "ItemsCount: " + mPresenter.getFilesCount());
+        return mPresenter.getFilesCount();
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (files[position].isDirectory()) return TYPE_FOLDER;
+        if (mPresenter.getFileInCurrentDirectory(position).isDirectory()) return TYPE_FOLDER;
         return TYPE_FILE;
     }
 
-    @Override
-    public void onClickDirectory(File file) {
-        Log.d(tag, "onClickDirectory");
-        setDirectory(file);
-        mPresenter.onDirectoryChanged(file.getPath());
-    }
-
-    @Override
-    public void onClickImage(File file, int position) {
-        Log.d(tag, "onClickImage");
-        int pos = 0;
-        for (File currentFile: files) {
-            if (isImage(currentFile.getPath())) {
-                if (file == currentFile) {
-                    break;
-                } else {
-                    ++pos;
-                }
-            }
-        }
-        router.showMovePicScreen(file.getPath(), pos);
-    }
-
-    String getCurrentDirectory() {
-        return currentFile.getPath();
-    }
 }
 
 

@@ -4,9 +4,7 @@ import android.graphics.Bitmap;
 import android.util.Log;
 import android.view.View;
 
-import com.stacktivity.movepic.Router;
 import com.stacktivity.movepic.data.MovePicRepository;
-import com.stacktivity.movepic.filemanager.FileManagerContract;
 import com.stacktivity.movepic.utils.FileWorker;
 
 import java.io.File;
@@ -15,20 +13,18 @@ import java.io.File;
 public class MovePicPresenter implements MovePicContract.Presenter {
     final private String tag = MovePicPresenter.class.getName();
 
-    final private MovePicContract.View mView;
-    private MovePicContract.Repository repository;
-    final private Router mRouter;
-    private ImagePagerAdapter imageAdapter;
-    final private BindButtonsAdapter bindButtonsAdapter;
+    private final MovePicContract.View mView;
+    private final MovePicContract.Repository repository;
+    private final ImagePagerAdapter imageAdapter;
+    private final BindButtonsAdapter bindButtonsAdapter;
 
-    public MovePicPresenter(MovePicContract.View view, MovePicRepository repository, Router router) {
+    MovePicPresenter(MovePicContract.View view, MovePicRepository repository) {
         Log.d(tag, "constructor");
         mView = view;
-        mView.setPresenter(this);
         this.repository = repository;
-        mRouter = router;
         imageAdapter = new ImagePagerAdapter(this);
         bindButtonsAdapter = new BindButtonsAdapter(this);
+        mView.setPresenter(this);
     }
 
     @Override
@@ -37,14 +33,8 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     }
 
     @Override
-    public String getCurrentImageName() {
-        String[] arr = getImagePath(mView.getCurrentItemNum()).split("[A-Za-z0-9.]*/");
-        return arr[arr.length - 1];
-    }
-
-    @Override
     public int getCurrentImageNum() {
-        return mView.getCurrentItemNum();
+        return repository.getCurrentImageNum();
     }
 
     @Override
@@ -62,11 +52,16 @@ public class MovePicPresenter implements MovePicContract.Presenter {
         return imageAdapter;
     }
 
+    @Override
+    public void onImagePageHasChange(int pos) {
+        repository.setCurrentImageNum(pos);
+    }
+
     private void deleteCurrentImage() {
         Log.d(tag, "deleteCurrentImage");
         int left = repository.deleteImage(getCurrentImageNum());
         if (left < 1) {
-            mRouter.back();
+            close();
         } else {
             imageAdapter.notifyDataSetChanged();
         }
@@ -77,7 +72,7 @@ public class MovePicPresenter implements MovePicContract.Presenter {
         Log.d(tag, "deleteCurrentImageBuffered");
         int left = repository.deleteImageBuffered(getCurrentImageNum());
         if (left < 1) {
-            mRouter.back();
+            close();
         } else {
             imageAdapter.notifyDataSetChanged();
         }
@@ -123,19 +118,9 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     }
 
     @Override
-    public void addBindButton() {
-        mRouter.showFileManagerDialog(new FileManagerContract.Callback() {
-            @Override
-            public void onSuccess(String folderPath) {
-                repository.addNewBindPath(folderPath);
-                bindButtonsAdapter.notifyItemInserted(repository.getBindButtonsCount() - 1);
-            }
-
-            @Override
-            public void onError() {
-
-            }
-        });
+    public void addBindButton(String directoryPath) {
+        repository.addNewBindPath(directoryPath);
+        bindButtonsAdapter.notifyItemInserted(repository.getBindButtonsCount() - 1);
     }
 
     @Override
@@ -146,5 +131,14 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     @Override
     public int getBindButtonsCount() {
         return repository.getBindButtonsCount();
+    }
+
+    private void close() {
+        mView.close();
+    }
+
+    @Override
+    public void onDestroy() {
+        repository.onDestroy();
     }
 }

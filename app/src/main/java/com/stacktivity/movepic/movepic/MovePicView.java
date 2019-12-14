@@ -5,12 +5,10 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,7 +17,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -34,8 +31,12 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.stacktivity.movepic.R;
 import com.stacktivity.movepic.controllers.OnDoubleTouchListener;
+import com.stacktivity.movepic.filemanager.FileManagerContract;
+import com.stacktivity.movepic.providers.FileManagerDialogProvider;
 
-import java.util.Objects;
+
+import static androidx.core.util.Preconditions.checkNotNull;
+
 
 public class MovePicView extends Fragment implements MovePicContract.View {
     final private String tag = MovePicView.class.getName();
@@ -45,20 +46,14 @@ public class MovePicView extends Fragment implements MovePicContract.View {
     private FrameLayout imageContainer;
     private ImageView expandedImageView;
     private float expandedImageCurrentX, expandedImageCurrentY;
-    private int mDisplayWidth, mDisplayHeight;
 //    private WebView expandedImageWebView;
     private ViewPager imageViewPager;
     private Animator mImageZoomAnimator;
-    // Устанавливаем "короткое" время анимации.
-    private int mShortAnimationDuration = 200;
-    private int firstImageNum;
-
-    private RecyclerView bindButtonsContainer;
-    private RecyclerView.LayoutManager layoutManager;
+    private final int mShortAnimationDuration = 200;
 
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.movepic_menu, menu);
     }
 
@@ -69,7 +64,7 @@ public class MovePicView extends Fragment implements MovePicContract.View {
                 mPresenter.deleteCurrentImageBuffered();
                 break;
             case R.id.action_add:
-                mPresenter.addBindButton();
+                showFileManagerDialog();
                 break;
             case R.id.action_restore_image:
                 mPresenter.onButtonRestoreImageClicked();
@@ -80,27 +75,15 @@ public class MovePicView extends Fragment implements MovePicContract.View {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        Log.d(tag, "onCreate");
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        ((WindowManager) Objects.requireNonNull(getContext()).getSystemService(Context.WINDOW_SERVICE))
-                .getDefaultDisplay().getMetrics(displayMetrics);
-        mDisplayWidth = displayMetrics.widthPixels;
-        mDisplayHeight = displayMetrics.heightPixels;
-        Log.d(tag, "DisplayWidth = " + mDisplayWidth + ", DisplayHeight = " + mDisplayHeight);
-        Bundle args = getArguments();
-        if (args != null) {
-            firstImageNum = args.getInt(MovePicContract.TAG_ITEM_NUM);
-        } else {
-            Log.e(tag, "can't get pathIMG");
-            // TODO
-        }
     }
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_movepic, container, false);
 
         createImageViewer(view);
@@ -109,20 +92,43 @@ public class MovePicView extends Fragment implements MovePicContract.View {
         return view;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mPresenter = null;
+        imageContainer = null;
+        expandedImageView = null;
+        imageViewPager = null;
+        mImageZoomAnimator = null;
+    }
+
     private void createImageViewer(View view) {
+        Log.d(tag, "createImageViewer");
         imageContainer = view.findViewById(R.id.image_container);
         expandedImageView = view.findViewById(R.id.expanded_image);
 
         imageViewPager = view.findViewById(R.id.imageViewPager);
         imageViewPager.setAdapter(mPresenter.getImageAdapter());
-        imageViewPager.setCurrentItem(firstImageNum);
+        imageViewPager.setCurrentItem(mPresenter.getCurrentImageNum());
+        imageViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+            @Override
+            public void onPageScrollStateChanged(int state) { }
+
+            @Override
+            public void onPageSelected(int position) {
+                Log.d(tag, "Current image " + position);
+                mPresenter.onImagePageHasChange(position);
+            }
+        });
     }
 
     private void createBindButtonsContainer(View view) {
-        bindButtonsContainer = view.findViewById(R.id.bind_buttons_container);
+        RecyclerView bindButtonsContainer = view.findViewById(R.id.bind_buttons_container);
         bindButtonsContainer.setAdapter(mPresenter.getBindButtonsAdapter());
-        layoutManager = new LinearLayoutManager(getContext());
-        ((LinearLayoutManager) layoutManager).setOrientation(LinearLayoutManager.HORIZONTAL);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         bindButtonsContainer.setLayoutManager(layoutManager);
     }
 
@@ -142,8 +148,8 @@ public class MovePicView extends Fragment implements MovePicContract.View {
     }
 
     @Override
-    public int getCurrentItemNum() {
-        return imageViewPager.getCurrentItem();
+    public void showImage(int numImage) {
+        imageViewPager.setCurrentItem(numImage);
     }
 
     @Override
@@ -242,13 +248,13 @@ public class MovePicView extends Fragment implements MovePicContract.View {
             private void setNewPivot(float pivotX, float pivotY) {
                 if (pivotX < 0) {
                     pivotX = 0;
-                } else if (pivotX > mDisplayWidth) {
-                    pivotX = mDisplayWidth;
+                } else if (pivotX > getSizeImageContainer()[0]) {
+                    pivotX = getSizeImageContainer()[0];
                 }
                 if (pivotY < 0) {
                     pivotY = 0;
-                } else if (pivotY > mDisplayHeight) {
-                    pivotY = mDisplayHeight;
+                } else if (pivotY > getSizeImageContainer()[1]) {
+                    pivotY = getSizeImageContainer()[1];
                 }
 
                 if (expandedImageView.getPivotX() != pivotX) {
@@ -304,7 +310,6 @@ public class MovePicView extends Fragment implements MovePicContract.View {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     expandedImageCurrentX = event.getRawX();
                     expandedImageCurrentY = event.getRawY();
-                    Log.d(tag, "expandedImageOnClick: X: " + expandedImageCurrentX + " Y: " + expandedImageCurrentY);
                 }
                 else if (event.getAction() == MotionEvent.ACTION_MOVE) {
                     float x = event.getRawX();
@@ -321,6 +326,18 @@ public class MovePicView extends Fragment implements MovePicContract.View {
                 }
             }
         });
+    }
+
+    @Override
+    public void showFileManagerDialog() {
+        FileManagerDialogProvider provider = (FileManagerDialogProvider) getActivity();
+        checkNotNull(provider);
+        provider.showFileManagerDialog();
+    }
+
+    @Override
+    public void close() {
+        checkNotNull(getActivity()).onBackPressed();
     }
 
     /*@Override

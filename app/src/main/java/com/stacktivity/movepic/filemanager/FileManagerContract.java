@@ -1,29 +1,39 @@
 package com.stacktivity.movepic.filemanager;
 
-import android.content.Context;
 
-import androidx.appcompat.widget.Toolbar;
+import java.io.File;
 
 public interface FileManagerContract {
-    interface Callback {
-        void onSuccess(String folderPath);
-        void onError();
-    }
+    String KEY_DIALOG_SESSION = "dialogSession";
+    int RC_FILE_MANAGER_DIALOG = 456;
 
     interface View {
-        Context getViewContext();
+        void setPresenter(Presenter presenter);
+        void showMessage(String msg);
+        void showMessage(int resId);
         void showCreateFolderDialog();
         void showFolderPath(String path);
-        Toolbar getToolBar();
+        void showMovePicScreen(String imagePath);
     }
 
     interface Presenter {
         FilesAdapter getFilesAdapter();
-        void restorePath(String restoredPath);
         void onAddFolderButtonClick();
         void createFolder(String name);
-        String getCurrentDirectory();
+        String getCurrentDirectoryPath();
+        File getFileInCurrentDirectory(int pos);
+        int getFilesCount();
         void createNomedia();
-        void onDirectoryChanged(String newPath);
+        boolean goBack();
+    }
+
+    interface Repository {
+        File getDefaultDirectory();
+        File getCurrentDirectory();
+        File getFile(int pos);
+        int getFilesCount();
+        String getSavedDirectoryPath();
+        void setNewDirectory(File directory, boolean save);
+        void dataHasBeenChanged();
     }
 }

@@ -1,33 +1,34 @@
 package com.stacktivity.movepic.filemanager;
 
 import android.util.Log;
-import android.widget.Toast;
 
-import com.stacktivity.movepic.Router;
+import com.stacktivity.movepic.R;
+import com.stacktivity.movepic.data.FileManagerRepository;
 
 import java.io.File;
 import java.io.IOException;
 
-public class FileManagerPresenter implements FileManagerContract.Presenter {
+
+public class FileManagerPresenter implements FileManagerContract.Presenter, FileManagerView.OnClickFileListener {
     final static private String tag = FileManagerPresenter.class.getName();
 
     private final FileManagerContract.View mView;
+    private final FileManagerRepository mRepository;
     private FilesAdapter adapter;
+    private boolean isDialogSession;
 
-    FileManagerPresenter(FileManagerContract.View view, Router router) {
+    FileManagerPresenter(FileManagerContract.View view, FileManagerRepository repository, boolean isDialogSession) {
         mView = view;
-        adapter = new FilesAdapter(this, mView.getViewContext(), router);
+        mRepository = repository;
+        adapter = new FilesAdapter(this, this);
+        this.isDialogSession = isDialogSession;
+        mView.setPresenter(this);
     }
 
 
     @Override
     public FilesAdapter getFilesAdapter() {
         return adapter;
-    }
-
-    @Override
-    public void restorePath(String restoredPath) {
-        adapter.restoreDirectory(restoredPath);
     }
 
     @Override
@@ -38,33 +39,39 @@ public class FileManagerPresenter implements FileManagerContract.Presenter {
 
     @Override
     public void createFolder(String name) {
-        File file = new File(adapter.getCurrentDirectory() + '/' + name);
+        File file = new File(getCurrentDirectoryPath() + '/' + name);
         if (file.mkdir()) {
             Log.d(tag, "createFolder: " + file.getPath());
-            final Toast successToast = Toast.makeText(mView.getViewContext(),
-                    "Успех",
-                    Toast.LENGTH_SHORT);
-            successToast.show();
-            adapter.refresh();
+            mView.showMessage(R.string.success);
+            mRepository.dataHasBeenChanged();
+            adapter.notifyDataSetChanged();
         }
     }
 
     @Override
-    public String getCurrentDirectory() {
-        return adapter.getCurrentDirectory();
+    public String getCurrentDirectoryPath() {
+        return mRepository.getCurrentDirectory().getPath();
+    }
+
+    @Override
+    public File getFileInCurrentDirectory(int pos) {
+        return mRepository.getFile(pos);
+    }
+
+    @Override
+    public int getFilesCount() {
+        return mRepository.getFilesCount();
     }
 
     @Override
     public void createNomedia() {
-        File file = new File(adapter.getCurrentDirectory() + "/.nomedia");
+        File file = new File(getCurrentDirectoryPath() + "/.nomedia");
         try {
             if (file.createNewFile()) {
                 Log.d(tag, "createFolder: " + file.getPath());
-                final Toast successToast = Toast.makeText(mView.getViewContext(),
-                        "Успех",
-                        Toast.LENGTH_SHORT);
-                successToast.show();
-                adapter.refresh();
+                mView.showMessage(R.string.success);
+                mRepository.dataHasBeenChanged();
+                adapter.notifyDataSetChanged();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -72,7 +79,33 @@ public class FileManagerPresenter implements FileManagerContract.Presenter {
     }
 
     @Override
-    public void onDirectoryChanged(String newPath) {
-        mView.showFolderPath(newPath);
+    public boolean goBack() {
+        File currentDirectory = mRepository.getCurrentDirectory();
+        if (mRepository.getCurrentDirectory().equals(mRepository.getDefaultDirectory())) {
+            return false;
+        }
+        File parent = currentDirectory.getParentFile();
+        if (parent != null) {
+            onClickDirectory(parent);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onClickDirectory(File file) {
+        Log.d(tag, "onClickDirectory");
+        mView.showFolderPath(file.getPath());
+        if (isDialogSession) {
+            mRepository.setNewDirectory(file, false);
+        } else {
+            mRepository.setNewDirectory(file, true);
+        }
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onClickImage(File file) {
+        mView.showMovePicScreen(file.getPath());
     }
 }

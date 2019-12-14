@@ -16,11 +16,11 @@ import static com.stacktivity.movepic.utils.FileWorker.isImage;
 final class FileViewHolder extends RecyclerView.ViewHolder {
 
     private final TextView filename;
-    private FileManagerView.OnClickFileManagerItem clickManager;
+    private FileManagerView.OnClickFileListener clickListener;
 
-    FileViewHolder(View view, FileManagerView.OnClickFileManagerItem onClickFileManagerItem) {
+    FileViewHolder(View view, FileManagerView.OnClickFileListener onClickFileManagerItem) {
         super(view);
-        this.clickManager = onClickFileManagerItem;
+        this.clickListener = onClickFileManagerItem;
         filename = view.findViewById(R.id.filename);
     }
 
@@ -33,10 +33,10 @@ final class FileViewHolder extends RecyclerView.ViewHolder {
             @Override
             public void onClick(View v) {
                 if (file.isDirectory()) {
-                    clickManager.onClickDirectory(file);
+                    clickListener.onClickDirectory(file);
                 } else {
                     if (isImage(file.getPath())) {
-                        clickManager.onClickImage(file, getAdapterPosition());
+                        clickListener.onClickImage(file);
                     }
                 }
             }

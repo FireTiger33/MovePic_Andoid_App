@@ -2,156 +2,100 @@ package com.stacktivity.movepic.filemanager;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.navigation.NavigationView;
 import com.stacktivity.movepic.R;
-import com.stacktivity.movepic.Router;
+import com.stacktivity.movepic.providers.MovePicProvider;
 
 import java.io.File;
-import java.util.Objects;
+
+import static androidx.core.util.Preconditions.checkNotNull;
 
 
-public class FileManagerView extends Fragment implements FileManagerContract.View,
-        NavigationView.OnNavigationItemSelectedListener {
+public class FileManagerView extends Fragment implements FileManagerContract.View {
     final private String tag = FileManagerView.class.getName();
 
-    final static public String KEY_FILEMANAGER_DIALOG = "FileManagerDialog";
-    private static final String FILE_MANAGER_PREFERENCES = "FileManagerPreferences";
-    final private String KEY_PATH = "Path";
-
-    private boolean isDialogSession;
-    private SharedPreferences mPreferences;
-    private String restoredPath;
-
-    private View mView;
-    private View mTopToolBar;
     private TextView folderPathTextView;
     private FileManagerContract.Presenter mPresenter;
-    private Router router;
     private View createNewFolderDialogView;
 
-    @Override
-    public Context getViewContext() {
-        return getContext();
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        return false;
-    }
-
-    interface OnClickFileManagerItem {
+    interface OnClickFileListener {
         void onClickDirectory(final File file);
-        void onClickImage(final File file, int imagePosition);
-
+        void onClickImage(final File file);
     }
+
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         Log.d(tag, "onCreate");
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+//        setHasOptionsMenu(true);
 
-        Bundle args = getArguments();
-        if (args != null && args.containsKey(KEY_FILEMANAGER_DIALOG) && args.getBoolean(KEY_FILEMANAGER_DIALOG)) {
+        /*Bundle args = getArguments();
+        if (args != null && args.containsKey(KEY_DIALOG_SESSION) && args.getBoolean(KEY_DIALOG_SESSION)) {
             isDialogSession = true;
-        }
-
-        router = (Router) getActivity();
-        mPresenter = new FileManagerPresenter(this, (Router) getActivity());
+        }*/
     }
 
     @SuppressLint("InflateParams")
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        mView = inflater.inflate(R.layout.fragment_file_manager, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_file_manager, container, false);
 
-        mPreferences = Objects.requireNonNull(getContext()).getSharedPreferences(FILE_MANAGER_PREFERENCES, Context.MODE_PRIVATE);
-        if (mPreferences.contains(KEY_PATH)) {
-            restoredPath = mPreferences.getString(KEY_PATH, null);
-            mPresenter.restorePath(restoredPath);
-        }
-        Log.d(tag, "restoredPath: " + restoredPath);
+        folderPathTextView = checkNotNull(getActivity()).findViewById(R.id.folder_path);
 
-        mTopToolBar = mView.findViewById(R.id.top_tool_bar);
-        if (isDialogSession) {
-            showCloseButton();
-        } else {
-            showOpenNavigationViewButton();
-        }
-
-        folderPathTextView = mTopToolBar.findViewById(R.id.folder_path);
-
-        configFilesView(mView);
-
-        mPresenter.getFilesAdapter().init();
+        configFilesView(view);
 
         createNewFolderDialogView = inflater.inflate(R.layout.create_folder_dialog, null, false);
 
-        return mView;
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(tag, "onPause");
-
-        mPreferences.edit().putString(KEY_PATH, mPresenter.getCurrentDirectory()).apply();
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        Log.d(tag, "onCreateOptionsMenu");
-        inflater.inflate(R.menu.file_manager_dialog_menu, menu);
-
-        if (!isDialogSession) {
-            menu.findItem(R.id.action_select).setVisible(false);
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_select:
-                router.folderSelected(mPresenter.getCurrentDirectory());
-                break;
-            case R.id.action_add:
-                Log.d(tag, "onAddFolderBtnClick");
-                mPresenter.onAddFolderButtonClick();
-                break;
-            case R.id.action_add_nomedia:
-                mPresenter.createNomedia();
-                break;
-            case R.id.action_search:
-                break;
-        }
-        return true;
+        return view;
     }
 
     @Override
     public void showFolderPath(String path) {
         folderPathTextView.setText(path);
+    }
+
+    @Override
+    public void showMovePicScreen(String imagePath) {
+        try {
+            MovePicProvider provider = (MovePicProvider) getActivity();
+            checkNotNull(provider);
+            ((MovePicProvider) getActivity()).showMovePicScreen(imagePath);
+        } catch (ClassCastException e){
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void setPresenter(FileManagerContract.Presenter presenter) {
+        mPresenter = presenter;
+    }
+
+    @Override
+    public void showMessage(String msg) {
+        Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showMessage(int resId) {
+        Toast.makeText(getContext(), resId, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -183,43 +127,9 @@ public class FileManagerView extends Fragment implements FileManagerContract.Vie
 
     private void configFilesView(View view) {
         Log.d(tag, "configFilesView");
-        RecyclerView recyclerView = view.findViewById(R.id.files);
-        recyclerView.setAdapter(mPresenter.getFilesAdapter());
-        recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        showFolderPath(mPresenter.getCurrentDirectory());
-    }
-
-
-
-    private void showCloseButton() {
-        Button closeButton = mTopToolBar.findViewById(R.id.action_close);
-        closeButton.setVisibility(View.VISIBLE);
-        closeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                router.back();
-            }
-        });
-    }
-
-    private void showOpenNavigationViewButton() {
-        mTopToolBar.findViewById(R.id.action_close).setVisibility(View.GONE);
-        Button openNavViewButton = mView.findViewById(R.id.action_open_navigation_view);
-        openNavViewButton.setVisibility(View.VISIBLE);
-        openNavViewButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                router.showNavigationView();
-            }
-        });
-    }
-
-    @Override
-    public Toolbar getToolBar() {
-        return (Toolbar) mTopToolBar;
-    }
-
-    public boolean goBack() {
-        return mPresenter.getFilesAdapter().goBack();
+        RecyclerView filesView = view.findViewById(R.id.files);
+        filesView.setAdapter(mPresenter.getFilesAdapter());
+        filesView.setLayoutManager(new LinearLayoutManager(getContext()));
+        showFolderPath(mPresenter.getCurrentDirectoryPath());
     }
 }

@@ -4,32 +4,33 @@ import android.graphics.Bitmap;
 
 
 public interface MovePicContract {
-    String TAG_ITEM_NUM = "ItemNum";
+    String KEY_PATH_IMAGE = "imagePath";
 
     interface View {
         void setPresenter(MovePicContract.Presenter presenter);
         void showToast(int resId);
         void showToast(String msg);
-        int getCurrentItemNum();
+        void showImage(int numImage);
         int[] getSizeImageContainer();
         void zoomImageFromThumb(android.view.View imageView, Bitmap fullImage,
                                 float centerX, float centerY);
 //        void zoomImageFromThumbPath(String imagePath, float centerX, float centerY);
+        void showFileManagerDialog();
+        void close();
     }
 
     interface Presenter {
         String getImagePath(int num);
-        String getCurrentImageName();
         int getCurrentImageNum();  // TODO private
         int getCountImages();
         BindButtonsAdapter getBindButtonsAdapter();
         ImagePagerAdapter getImageAdapter();
 
+        void onImagePageHasChange(int pos);
+
         /**
          * Removes the current image from the memory and the adapter itself.
          * Saves Bitmap and path to buffer[2] for possible recovery.
-         *
-         * @return number of remaining images in the folder
          */
         void deleteCurrentImageBuffered();
 
@@ -43,10 +44,11 @@ public interface MovePicContract {
          */
         void onButtonRestoreImageClicked();
         void onBindButtonClick(int pos);
+
         void onImageDoubleClick(android.view.View imageView, Bitmap fullImage, float x, float y);
         int[] getSizeImageContainer();
 
-        void addBindButton();
+        void addBindButton(String directoryPath);
 
 
         // Repositories methods
@@ -59,6 +61,8 @@ public interface MovePicContract {
         void onBindRepositoryPathAtBindButton(int pos, BindButtonViewHolder viewHolder);
 
         int getBindButtonsCount();
+
+        void onDestroy();
     }
 
     interface Repository {
@@ -75,6 +79,9 @@ public interface MovePicContract {
          * Add path to end of paths bonded buttons list
          */
         void addNewBindPath(String path);
+
+        int getCurrentImageNum();
+        void setCurrentImageNum(int num);
 
         /**
          * @param pos num image
@@ -106,5 +113,7 @@ public interface MovePicContract {
          * @return 0 if success; 1 if error; 2 if buffer is empty
          */
         int restoreLastDeletedImage(int currentImageNum);
+
+        void onDestroy();
     }
 }

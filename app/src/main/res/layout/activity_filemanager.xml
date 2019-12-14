@@ -14,16 +14,20 @@
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header_main"
         app:menu="@menu/activity_main_drawer" />
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+        <include
+            android:id="@+id/top_tool_bar"
+            layout="@layout/file_manager_top_action_bar" />
 
         <FrameLayout
             android:id="@+id/main_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_below="@+id/top_tool_bar"
             android:layout_above="@+id/myToolBar">
-
         </FrameLayout>
 
         <androidx.appcompat.widget.Toolbar
@@ -32,4 +36,5 @@
             android:layout_alignParentBottom="true">
         </androidx.appcompat.widget.Toolbar>
     </RelativeLayout>
+
 </androidx.drawerlayout.widget.DrawerLayout>

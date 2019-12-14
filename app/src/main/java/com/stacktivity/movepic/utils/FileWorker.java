@@ -6,6 +6,8 @@ import android.os.Environment;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
+import androidx.annotation.NonNull;
+
 import com.stacktivity.movepic.R;
 
 import java.io.File;
@@ -16,6 +18,8 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Comparator;
+
+import static androidx.core.util.Preconditions.checkNotNull;
 
 /**
  * Deals with standard work with files
@@ -57,10 +61,8 @@ public class FileWorker {
         return mimeType != null && mimeType.contains("image");
     }
 
-    static public File[] sortFiles(final File[] files) {
-        if (files == null) {
-            return null;
-        }
+    static public File[] sortFiles(@NonNull final File[] files) {
+        checkNotNull(files);
         Arrays.sort(files, new Comparator<File>() {
             @Override
             public int compare(File f1, File f2) {

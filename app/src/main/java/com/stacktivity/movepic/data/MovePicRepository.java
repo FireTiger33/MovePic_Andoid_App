@@ -32,6 +32,7 @@ public class MovePicRepository implements MovePicContract.Repository {
     private String[] imagesPathBuffer = new String[2];
 
     private ArrayList<String> imagesPaths = new ArrayList<>();
+    private int currentImageNum = 0;
 
 
     public MovePicRepository(SharedPreferences preferences, String pathOpenedImage) {
@@ -55,6 +56,16 @@ public class MovePicRepository implements MovePicContract.Repository {
         pathsBondedButtons.add(path);
         saveChangedData();
 
+    }
+
+    @Override
+    public int getCurrentImageNum() {
+        return currentImageNum;
+    }
+
+    @Override
+    public void setCurrentImageNum(int num) {
+        currentImageNum = num;
     }
 
     @Override
@@ -136,12 +147,15 @@ public class MovePicRepository implements MovePicContract.Repository {
     }
 
     private void loadImagePathsInFolder(String pathOpenedImage) {
-        File file = new File(pathOpenedImage);
-        file = file.getParentFile();
+        File imageFile = new File(pathOpenedImage);
+        File imageDirectory = imageFile.getParentFile();
 
-        for (File currentFile : sortFiles(file.listFiles())) {
+        for (File currentFile : sortFiles(imageDirectory.listFiles())) {
             String currentFilePath = currentFile.getPath();
             if (isImage(currentFilePath)) {
+                if (currentFile.getName().equals(imageFile.getName())) {
+                    currentImageNum = imagesPaths.size();
+                }
                 imagesPaths.add(currentFilePath);
             }
         }
@@ -170,5 +184,13 @@ public class MovePicRepository implements MovePicContract.Repository {
         imagesBitmapBuffer[0] = null;
         imagesPathBuffer[1] = imagesPathBuffer[0];
         imagesPathBuffer[0] = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        pathsBondedButtons.clear();
+        imagesBitmapBuffer = null;
+        imagesPathBuffer = null;
+        imagesPaths.clear();
     }
 }

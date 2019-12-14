@@ -21,4 +21,5 @@
     <string name="unexpected_error">Unexpected error</string>
     <string name="file_delete_err">file cannot be deleted</string>
     <string name="cant_create_file">File can\'t be created</string>
+    <string name="success">Успех</string>
 </resources>
