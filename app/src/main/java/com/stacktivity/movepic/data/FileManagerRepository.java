@@ -13,7 +13,7 @@ import static com.stacktivity.movepic.utils.FileWorker.sortFiles;
 public class FileManagerRepository implements FileManagerContract.Repository {
     private final String tag = FileManagerRepository.class.getSimpleName();
 
-    private SharedPreferences mPreferences = null;
+    private final SharedPreferences mPreferences;
     private final String KEY_PATH = "directory";
 
     private String savedDirectoryPath;
@@ -28,6 +28,7 @@ public class FileManagerRepository implements FileManagerContract.Repository {
     }
 
     public FileManagerRepository(String lastOpenedPath) {
+        mPreferences = null;
         savedDirectoryPath = lastOpenedPath;
         loadFiles();
     }

@@ -14,8 +14,8 @@ public class FileManagerPresenter implements FileManagerContract.Presenter, File
 
     private final FileManagerContract.View mView;
     private final FileManagerRepository mRepository;
-    private FilesAdapter adapter;
-    private boolean isDialogSession;
+    private final FilesAdapter adapter;
+    private final boolean isDialogSession;
 
     FileManagerPresenter(FileManagerContract.View view, FileManagerRepository repository, boolean isDialogSession) {
         mView = view;
