@@ -59,6 +59,25 @@ public class MovePicRepository implements MovePicContract.Repository {
     }
 
     @Override
+    public void moveBindPath(int fromPos, int toPos, boolean saveChanged) {
+        String path = pathsBondedButtons.get(fromPos);
+        pathsBondedButtons.remove(fromPos);
+        if (toPos > fromPos) {
+            toPos -= 1;
+        }
+        pathsBondedButtons.add(toPos, path);
+        if (saveChanged) {
+            saveChangedData();
+        }
+    }
+
+    @Override
+    public void deleteBindPath(int pos) {
+        pathsBondedButtons.remove(pos);
+        saveChangedData();
+    }
+
+    @Override
     public int getCurrentImageNum() {
         return currentImageNum;
     }

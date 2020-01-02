@@ -16,4 +16,6 @@
     <item
         android:id="@+id/action_add"
         android:title="@string/add_binding" />
+    <item android:id="@+id/action_edit"
+        android:title="@string/remove_buttons"/>
 </menu>

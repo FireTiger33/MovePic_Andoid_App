@@ -23,6 +23,8 @@ public interface MovePicContract {
         String getImagePath(int num);
         int getCurrentImageNum();  // TODO private
         int getCountImages();
+
+        // Used by View
         BindButtonsAdapter getBindButtonsAdapter();
         ImagePagerAdapter getImageAdapter();
 
@@ -43,15 +45,18 @@ public interface MovePicContract {
          * 4) Unknown error
          */
         void onButtonRestoreImageClicked();
+        void changeBindButtonMode();
+
+        // Used by BindButtonsViewHolder
         void onBindButtonClick(int pos);
 
         void onImageDoubleClick(android.view.View imageView, Bitmap fullImage, float x, float y);
         int[] getSizeImageContainer();
 
         void addBindButton(String directoryPath);
-
-
-        // Repositories methods
+        void deleteBindButton(int pos);
+        void moveBindButton(int fromPos, int toPos);
+        boolean removeBindButtonsMode();
 
         /**
          * Retrieve saved path from repository and passes to ViewHolder
@@ -79,6 +84,8 @@ public interface MovePicContract {
          * Add path to end of paths bonded buttons list
          */
         void addNewBindPath(String path);
+        void moveBindPath(int fromPos, int toPos, boolean saveChanged);
+        void deleteBindPath(int pos);
 
         int getCurrentImageNum();
         void setCurrentImageNum(int num);

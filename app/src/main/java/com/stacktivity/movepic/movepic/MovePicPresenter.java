@@ -18,6 +18,8 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     private final ImagePagerAdapter imageAdapter;
     private final BindButtonsAdapter bindButtonsAdapter;
 
+    private boolean isRemoveBindButtonsMode = false;
+
     MovePicPresenter(MovePicContract.View view, MovePicRepository repository) {
         Log.d(tag, "constructor");
         mView = view;
@@ -108,6 +110,11 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     }
 
     @Override
+    public void changeBindButtonMode() {
+        isRemoveBindButtonsMode = !isRemoveBindButtonsMode;
+    }
+
+    @Override
     public void onImageDoubleClick(View imageView, Bitmap fullImage, float x, float y) {
         mView.zoomImageFromThumb(imageView, fullImage, x, y);
     }
@@ -124,8 +131,25 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     }
 
     @Override
+    public void deleteBindButton(int pos) {
+        repository.deleteBindPath(pos);
+        bindButtonsAdapter.notifyItemRemoved(pos);
+    }
+
+    @Override
+    public void moveBindButton(int fromPos, int toPos) {
+        repository.moveBindPath(fromPos, toPos, true);
+        bindButtonsAdapter.notifyItemMoved(fromPos, toPos);
+    }
+
+    @Override
+    public boolean removeBindButtonsMode() {
+        return isRemoveBindButtonsMode;
+    }
+
+    @Override
     public void onBindRepositoryPathAtBindButton(int pos, BindButtonViewHolder viewHolder) {
-        viewHolder.bind(repository.getBindPath(pos), pos);
+        viewHolder.bind(repository.getBindPath(pos));
     }
 
     @Override

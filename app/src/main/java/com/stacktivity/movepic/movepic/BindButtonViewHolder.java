@@ -10,41 +10,41 @@ import android.widget.Button;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.stacktivity.movepic.R;
-
-
-class BindButtonViewHolder extends RecyclerView.ViewHolder{
-    final private String tag = BindButtonViewHolder.class.getName();
+class BindButtonViewHolder extends RecyclerView.ViewHolder {
+    final private String tag = BindButtonViewHolder.class.getSimpleName();
 
     final private MovePicContract.Presenter mPresenter;
     final private Button mButton;
     private String mShortPath;
-    private int mPos;
     private long startButtonPressTime;
 
     @SuppressLint("ClickableViewAccessibility")
-    BindButtonViewHolder(@NonNull View itemView, MovePicContract.Presenter presenter) {
+    BindButtonViewHolder(@NonNull final View itemView, final MovePicContract.Presenter presenter) {
         super(itemView);
         mPresenter = presenter;
-        mButton = itemView.findViewById(R.id.bind_button);
+        mButton = (Button) itemView;
         mButton.setTextColor(Color.BLUE);
+
         itemView.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                Log.d(tag, "MotionEvent: " + event.getAction());
+            public boolean onTouch(View v, final MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         startButtonPressTime = System.currentTimeMillis();
                         break;
                     case MotionEvent.ACTION_UP:
-                        if (System.currentTimeMillis() - startButtonPressTime > 300) {
-                            if (mButton.getText().equals(getStringPos())) {
-                                mButton.setText(getShortPath());
-                            } else {
-                                mButton.setText(getStringPos());
-                            }
+                        if (presenter.removeBindButtonsMode()) {
+                            presenter.deleteBindButton(getAdapterPosition());
                         } else {
-                            mPresenter.onBindButtonClick(mPos);
+                            if (System.currentTimeMillis() - startButtonPressTime > 300) {
+                                if (mButton.getText().equals(getStringPos())) {
+                                    mButton.setText(getShortPath());
+                                } else {
+                                    mButton.setText(getStringPos());
+                                }
+                            } else {
+                                mPresenter.onBindButtonClick(getAdapterPosition());
+                            }
                         }
                         break;
                 }
@@ -54,14 +54,10 @@ class BindButtonViewHolder extends RecyclerView.ViewHolder{
         });
     }
 
-    void bind(String path, int pos) {
-        Log.d(tag, "bind");
-        mShortPath = ".." + path.split("/[A-Za-z0-9]*", 4)[3];  // TODO dynamic limit
+    void bind(String path) {
+        mShortPath = ".." + path.split("/[A-Za-z0-9]+", 4)[3];  // TODO dynamic limit
         Log.d(tag, "bind: shortPath = " + mShortPath);
-        mPos = pos;
-        if (mButton.getText() == "") {
-            mButton.setText(getStringPos());
-        }
+        mButton.setText(mShortPath);
     }
 
     private String getShortPath() {
@@ -69,6 +65,6 @@ class BindButtonViewHolder extends RecyclerView.ViewHolder{
     }
 
     private String getStringPos() {
-        return String.valueOf(mPos);
+        return String.valueOf(getAdapterPosition());
     }
 }

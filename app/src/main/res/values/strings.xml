@@ -22,4 +22,6 @@
     <string name="file_delete_err">file cannot be deleted</string>
     <string name="cant_create_file">File can\'t be created</string>
     <string name="success">Успех</string>
+    <string name="apply_changes">Apply changes</string>
+    <string name="remove_buttons">Remove buttons</string>
 </resources>

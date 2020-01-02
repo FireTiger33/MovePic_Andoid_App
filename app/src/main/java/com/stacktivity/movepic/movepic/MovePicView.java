@@ -25,13 +25,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import com.stacktivity.movepic.R;
 import com.stacktivity.movepic.controllers.OnDoubleTouchListener;
-import com.stacktivity.movepic.filemanager.FileManagerContract;
 import com.stacktivity.movepic.providers.FileManagerDialogProvider;
 
 
@@ -65,6 +65,14 @@ public class MovePicView extends Fragment implements MovePicContract.View {
                 break;
             case R.id.action_add:
                 showFileManagerDialog();
+                break;
+            case R.id.action_edit:
+                mPresenter.changeBindButtonMode();
+                if (mPresenter.removeBindButtonsMode()) {
+                    item.setTitle(R.string.apply_changes);
+                } else {
+                    item.setTitle(R.string.remove_buttons);
+                }
                 break;
             case R.id.action_restore_image:
                 mPresenter.onButtonRestoreImageClicked();
@@ -127,9 +135,22 @@ public class MovePicView extends Fragment implements MovePicContract.View {
     private void createBindButtonsContainer(View view) {
         RecyclerView bindButtonsContainer = view.findViewById(R.id.bind_buttons_container);
         bindButtonsContainer.setAdapter(mPresenter.getBindButtonsAdapter());
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-        layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
-        bindButtonsContainer.setLayoutManager(layoutManager);
+        LinearLayoutManager lm = new LinearLayoutManager(getContext());
+        lm.setOrientation(LinearLayoutManager.HORIZONTAL);
+        bindButtonsContainer.setLayoutManager(lm);
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.RIGHT | ItemTouchHelper.LEFT, 0)
+        {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                mPresenter.moveBindButton(viewHolder.getAdapterPosition(), target.getAdapterPosition());
+
+                return true;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) { }
+        }).attachToRecyclerView(bindButtonsContainer);
     }
 
     @Override
