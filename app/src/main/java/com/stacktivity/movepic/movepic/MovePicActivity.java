@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.util.Log;
-import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,9 +17,9 @@ import com.stacktivity.movepic.data.MovePicRepository;
 import com.stacktivity.movepic.filemanager.FileManagerActivity;
 import com.stacktivity.movepic.providers.FileManagerDialogProvider;
 import com.stacktivity.movepic.utils.ActivityUtils;
+import com.stacktivity.movepic.utils.ToolbarDemonstrator;
 
-import java.util.Objects;
-
+import static androidx.core.util.Preconditions.checkNotNull;
 import static com.stacktivity.movepic.filemanager.FileManagerContract.KEY_DIALOG_SESSION;
 import static com.stacktivity.movepic.filemanager.FileManagerContract.RC_FILE_MANAGER_DIALOG;
 import static com.stacktivity.movepic.movepic.MovePicContract.KEY_PATH_IMAGE;
@@ -31,20 +30,18 @@ public class MovePicActivity extends AppCompatActivity implements FileManagerDia
 
     private MovePicPresenter presenter;
 
-    private Toolbar mToolBar;
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movepic);
 
         // Configure bottom ToolBar
-        mToolBar = findViewById(R.id.myToolBar);
-        setSupportActionBar(mToolBar);
-        Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
+        Toolbar mToolbar = findViewById(R.id.myToolBar);
+        setSupportActionBar(mToolbar);
+        checkNotNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
 
         String pathImage = getIntent().getStringExtra(KEY_PATH_IMAGE);
-        showMovePicScreen(pathImage);
+        showMovePicScreen(pathImage, new ToolbarDemonstrator(mToolbar, getSupportActionBar(), 200));
     }
 
     @Override
@@ -54,10 +51,7 @@ public class MovePicActivity extends AppCompatActivity implements FileManagerDia
         outState.putString(KEY_PATH_IMAGE, presenter.getImagePath(presenter.getCurrentImageNum()));
     }
 
-    public void showMovePicScreen(String pathPic) {
-        // Activity configuration
-        mToolBar.setVisibility(View.VISIBLE);
-
+    public void showMovePicScreen(String pathPic, ToolbarDemonstrator demonstrator) {
         // Create fragment
         MovePicView movePicView;
         try {
@@ -80,6 +74,9 @@ public class MovePicActivity extends AppCompatActivity implements FileManagerDia
 
         // Create presenter
         presenter = new MovePicPresenter(movePicView, repository);
+
+        // Configure View
+        movePicView.setToolbarDemonstrator(demonstrator);
     }
 
     @Override
@@ -92,7 +89,6 @@ public class MovePicActivity extends AppCompatActivity implements FileManagerDia
         super.onDestroy();
         presenter.onDestroy();
         presenter = null;
-        mToolBar = null;
     }
 
     @Override
@@ -112,6 +108,5 @@ public class MovePicActivity extends AppCompatActivity implements FileManagerDia
                 presenter.addBindButton(data.getStringExtra(KEY_DIALOG_SESSION));
             }
         }
-
     }
 }

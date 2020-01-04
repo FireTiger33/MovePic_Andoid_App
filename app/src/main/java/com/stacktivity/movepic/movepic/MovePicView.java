@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -17,6 +18,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -25,6 +27,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,15 +36,19 @@ import androidx.viewpager.widget.ViewPager;
 import com.stacktivity.movepic.R;
 import com.stacktivity.movepic.controllers.OnDoubleTouchListener;
 import com.stacktivity.movepic.providers.FileManagerDialogProvider;
+import com.stacktivity.movepic.utils.ToolbarDemonstrator;
 
 
 import static androidx.core.util.Preconditions.checkNotNull;
+import static com.stacktivity.movepic.filemanager.FileManagerContract.KEY_DIALOG_SESSION;
+import static com.stacktivity.movepic.filemanager.FileManagerContract.RC_FILE_MANAGER_DIALOG;
 
 
 public class MovePicView extends Fragment implements MovePicContract.View {
     final private String tag = MovePicView.class.getName();
 
     private MovePicContract.Presenter mPresenter;
+    private ToolbarDemonstrator toolbarDemonstrator;
 
     private FrameLayout imageContainer;
     private ImageView expandedImageView;
@@ -50,6 +57,7 @@ public class MovePicView extends Fragment implements MovePicContract.View {
     private ViewPager imageViewPager;
     private Animator mImageZoomAnimator;
     private final int mShortAnimationDuration = 200;
+    private boolean fullscreen = false;
 
 
     @Override
@@ -82,6 +90,20 @@ public class MovePicView extends Fragment implements MovePicContract.View {
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Log.d(tag, "result" + resultCode);
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (data != null) {
+            if (requestCode == RC_FILE_MANAGER_DIALOG) {
+                mPresenter.addBindButton(data.getStringExtra(KEY_DIALOG_SESSION));
+            }
+        }
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         Log.d(tag, "onCreate");
         super.onCreate(savedInstanceState);
@@ -97,7 +119,22 @@ public class MovePicView extends Fragment implements MovePicContract.View {
         createImageViewer(view);
         createBindButtonsContainer(view);
 
+        if (savedInstanceState != null) {
+            fullscreen = savedInstanceState.getBoolean("fullscreen", false);
+
+            if (fullscreen) {
+                toolbarDemonstrator.hideActionBar();
+            }
+        }
+
         return view;
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putBoolean("fullscreen", fullscreen);
+
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -159,6 +196,11 @@ public class MovePicView extends Fragment implements MovePicContract.View {
     }
 
     @Override
+    public void setToolbarDemonstrator(ToolbarDemonstrator demonstrator) {
+        toolbarDemonstrator = demonstrator;
+    }
+
+    @Override
     public void showToast(int resId) {
         Toast.makeText(getContext(), resId, Toast.LENGTH_SHORT).show();
     }
@@ -171,6 +213,27 @@ public class MovePicView extends Fragment implements MovePicContract.View {
     @Override
     public void showImage(int numImage) {
         imageViewPager.setCurrentItem(numImage);
+    }
+
+
+    @Override
+    public void showFullscreenImage() {
+        fullscreen = !fullscreen;
+
+        FragmentActivity activity = checkNotNull(getActivity());
+
+        int screenFlag = fullscreen? WindowManager.LayoutParams.FLAG_FULLSCREEN
+                : WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN;
+
+        activity.getWindow().setFlags(screenFlag, screenFlag);
+
+        if (toolbarDemonstrator != null) {
+            if (fullscreen) {
+                toolbarDemonstrator.hideActionBar();
+            } else {
+                toolbarDemonstrator.showActionBar();
+            }
+        }
     }
 
     @Override

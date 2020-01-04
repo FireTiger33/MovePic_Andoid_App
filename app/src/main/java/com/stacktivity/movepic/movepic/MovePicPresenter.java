@@ -115,6 +115,11 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     }
 
     @Override
+    public void onImageClick(View imageView, Bitmap fullImage) {
+        mView.showFullscreenImage();
+    }
+
+    @Override
     public void onImageDoubleClick(View imageView, Bitmap fullImage, float x, float y) {
         mView.zoomImageFromThumb(imageView, fullImage, x, y);
     }

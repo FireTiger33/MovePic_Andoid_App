@@ -2,15 +2,18 @@ package com.stacktivity.movepic.movepic;
 
 import android.graphics.Bitmap;
 
+import com.stacktivity.movepic.utils.ToolbarDemonstrator;
 
 public interface MovePicContract {
     String KEY_PATH_IMAGE = "imagePath";
 
     interface View {
         void setPresenter(MovePicContract.Presenter presenter);
+        void setToolbarDemonstrator(ToolbarDemonstrator demonstrator);
         void showToast(int resId);
         void showToast(String msg);
         void showImage(int numImage);
+        void showFullscreenImage();
         int[] getSizeImageContainer();
         void zoomImageFromThumb(android.view.View imageView, Bitmap fullImage,
                                 float centerX, float centerY);
@@ -50,6 +53,7 @@ public interface MovePicContract {
         // Used by BindButtonsViewHolder
         void onBindButtonClick(int pos);
 
+        void onImageClick(android.view.View imageView, Bitmap fullImage);
         void onImageDoubleClick(android.view.View imageView, Bitmap fullImage, float x, float y);
         int[] getSizeImageContainer();
 

@@ -86,12 +86,13 @@ class ImagePagerAdapter extends PagerAdapter {
 
         imageView.setOnTouchListener(new OnDoubleTouchListener() {
             @Override
-            public void onDoubleClick(View v, MotionEvent event) {
-                mPresenter.onImageDoubleClick(imageView, getBitmap(position), event.getX(), event.getY());
+            public void onClick(View v, MotionEvent event) {
+                mPresenter.onImageClick(imageView, getBitmap(position));
             }
 
             @Override
-            public void onOtherEvent(View v, MotionEvent event) {
+            public void onDoubleClick(View v, MotionEvent event) {
+                mPresenter.onImageDoubleClick(imageView, getBitmap(position), event.getX(), event.getY());
             }
         });
 
