@@ -134,7 +134,8 @@ public class FileManagerActivity extends AppCompatActivity
         }
 
         // Create presenter
-        mPresenter = new FileManagerPresenter(fileManagerView, repository, isDialogSession);
+        mPresenter = new FileManagerPresenter(fileManagerView, fileManagerView.getLifecycle(),
+                repository, isDialogSession);
     }
 
     @Override

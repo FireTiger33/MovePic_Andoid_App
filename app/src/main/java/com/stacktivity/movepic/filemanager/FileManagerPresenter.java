@@ -2,6 +2,10 @@ package com.stacktivity.movepic.filemanager;
 
 import android.util.Log;
 
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.OnLifecycleEvent;
+
 import com.stacktivity.movepic.R;
 import com.stacktivity.movepic.data.FileManagerRepository;
 
@@ -9,7 +13,8 @@ import java.io.File;
 import java.io.IOException;
 
 
-public class FileManagerPresenter implements FileManagerContract.Presenter, FileManagerView.OnClickFileListener {
+public class FileManagerPresenter implements FileManagerContract.Presenter, FileManagerView.OnClickFileListener,
+        LifecycleObserver {
     final static private String tag = FileManagerPresenter.class.getName();
 
     private final FileManagerContract.View mView;
@@ -17,14 +22,22 @@ public class FileManagerPresenter implements FileManagerContract.Presenter, File
     private final FilesAdapter adapter;
     private final boolean isDialogSession;
 
-    FileManagerPresenter(FileManagerContract.View view, FileManagerRepository repository, boolean isDialogSession) {
+    FileManagerPresenter(FileManagerContract.View view, Lifecycle viewLifecycle,
+                         FileManagerRepository repository, boolean isDialogSession) {
         mView = view;
         mRepository = repository;
         adapter = new FilesAdapter(this, this);
         this.isDialogSession = isDialogSession;
         mView.setPresenter(this);
+        viewLifecycle.addObserver(this);
     }
 
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    private void refreshData() {
+        Log.d(tag, "refreshData");
+        mRepository.refreshFiles();
+        adapter.notifyDataSetChanged();
+    }
 
     @Override
     public FilesAdapter getFilesAdapter() {
@@ -43,8 +56,7 @@ public class FileManagerPresenter implements FileManagerContract.Presenter, File
         if (file.mkdir()) {
             Log.d(tag, "createFolder: " + file.getPath());
             mView.showMessage(R.string.success);
-            mRepository.dataHasBeenChanged();
-            adapter.notifyDataSetChanged();
+            refreshData();
         }
     }
 
@@ -70,8 +82,7 @@ public class FileManagerPresenter implements FileManagerContract.Presenter, File
             if (file.createNewFile()) {
                 Log.d(tag, "createFolder: " + file.getPath());
                 mView.showMessage(R.string.success);
-                mRepository.dataHasBeenChanged();
-                adapter.notifyDataSetChanged();
+                refreshData();
             }
         } catch (IOException e) {
             e.printStackTrace();

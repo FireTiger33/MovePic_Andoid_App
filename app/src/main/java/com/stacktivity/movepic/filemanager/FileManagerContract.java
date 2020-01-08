@@ -34,6 +34,6 @@ public interface FileManagerContract {
         int getFilesCount();
         String getSavedDirectoryPath();
         void setNewDirectory(File directory, boolean save);
-        void dataHasBeenChanged();
+        void refreshFiles();
     }
 }

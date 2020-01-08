@@ -56,7 +56,7 @@ public class FileManagerRepository implements FileManagerContract.Repository {
     }
 
     @Override
-    public void dataHasBeenChanged() {
+    public void refreshFiles() {
         loadFiles();
     }
 
