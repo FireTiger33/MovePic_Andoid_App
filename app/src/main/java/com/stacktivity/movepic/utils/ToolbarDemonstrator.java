@@ -26,6 +26,10 @@ public class ToolbarDemonstrator {
     }
 
     public void hideActionBar() {
+        if (!mActionBar.isShowing()) {
+            return;
+        }
+
         // initialize `mToolbarHeight`
         if (mToolbarHeight == 0) {
             mToolbarHeight = mToolbar.getHeight();
@@ -64,6 +68,10 @@ public class ToolbarDemonstrator {
     }
 
     public void showActionBar() {
+        if (mActionBar.isShowing()) {
+            return;
+        }
+
         if (mVaActionBar != null && mVaActionBar.isRunning()) {
             // we are already animating a transition - block here
             return;
@@ -94,5 +102,9 @@ public class ToolbarDemonstrator {
 
         mVaActionBar.setDuration(animateDuration);
         mVaActionBar.start();
+    }
+
+    public boolean actionBarIsShown() {
+        return mActionBar.isShowing();
     }
 }

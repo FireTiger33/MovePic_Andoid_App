@@ -115,8 +115,8 @@ public class MovePicPresenter implements MovePicContract.Presenter {
     }
 
     @Override
-    public void onImageClick(View imageView, Bitmap fullImage) {
-        mView.showFullscreenImage();
+    public void onImageClick() {
+        mView.showFullscreenMode();
     }
 
     @Override

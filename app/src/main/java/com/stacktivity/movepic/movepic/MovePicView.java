@@ -22,6 +22,7 @@ import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -34,6 +35,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import com.stacktivity.movepic.R;
+import com.stacktivity.movepic.controllers.OnDoubleClickListener;
 import com.stacktivity.movepic.controllers.OnDoubleTouchListener;
 import com.stacktivity.movepic.providers.FileManagerDialogProvider;
 import com.stacktivity.movepic.utils.ToolbarDemonstrator;
@@ -52,6 +54,7 @@ public class MovePicView extends Fragment implements MovePicContract.View {
 
     private FrameLayout imageContainer;
     private ImageView expandedImageView;
+    private TextView viewCurrentImageNum;
     private float expandedImageCurrentX, expandedImageCurrentY;
 //    private WebView expandedImageWebView;
     private ViewPager imageViewPager;
@@ -119,6 +122,9 @@ public class MovePicView extends Fragment implements MovePicContract.View {
         createImageViewer(view);
         createBindButtonsContainer(view);
 
+        viewCurrentImageNum = view.findViewById(R.id.current_image_num);
+        viewCurrentImageNum.setText(getCurrentImagePositionFromAll());
+
         if (savedInstanceState != null) {
             fullscreen = savedInstanceState.getBoolean("fullscreen", false);
 
@@ -165,8 +171,13 @@ public class MovePicView extends Fragment implements MovePicContract.View {
             public void onPageSelected(int position) {
                 Log.d(tag, "Current image " + position);
                 mPresenter.onImagePageHasChange(position);
+                viewCurrentImageNum.setText(getCurrentImagePositionFromAll());
             }
         });
+    }
+
+    private String getCurrentImagePositionFromAll() {
+        return imageViewPager.getCurrentItem()+1 + "/" + mPresenter.getCountImages();
     }
 
     private void createBindButtonsContainer(View view) {
@@ -217,15 +228,23 @@ public class MovePicView extends Fragment implements MovePicContract.View {
 
 
     @Override
-    public void showFullscreenImage() {
+    public void showFullscreenMode() {
         fullscreen = !fullscreen;
 
+        int screenFlag;
+        int visibilityFlag;
         FragmentActivity activity = checkNotNull(getActivity());
 
-        int screenFlag = fullscreen? WindowManager.LayoutParams.FLAG_FULLSCREEN
-                : WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN;
+        if (fullscreen) {
+            screenFlag = WindowManager.LayoutParams.FLAG_FULLSCREEN;
+            visibilityFlag = View.INVISIBLE;
+        } else {
+            screenFlag = WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN;
+            visibilityFlag = View.VISIBLE;
+        }
 
         activity.getWindow().setFlags(screenFlag, screenFlag);
+        viewCurrentImageNum.setVisibility(visibilityFlag);
 
         if (toolbarDemonstrator != null) {
             if (fullscreen) {
@@ -241,7 +260,7 @@ public class MovePicView extends Fragment implements MovePicContract.View {
         int[] size = new int[2];
         size[0] = imageContainer.getWidth();
         size[1] = imageContainer.getHeight();
-        Log.d(tag, "getSizeImageContainer: size = " + size[0] + "x" + size[1]);
+//        Log.d(tag, "getSizeImageContainer: size = " + size[0] + "x" + size[1]);
 
         return size;
     }
@@ -289,6 +308,12 @@ public class MovePicView extends Fragment implements MovePicContract.View {
             float deltaHeight = (startHeight - startBounds.height()) / 2;
             startBounds.top -= deltaHeight;
             startBounds.bottom += deltaHeight;
+        }
+
+        // Проверяем состояние Toolbar'a и прячем его
+        final boolean toolbarWillBeShown = toolbarDemonstrator.actionBarIsShown();
+        if (toolbarWillBeShown) {
+            toolbarDemonstrator.hideActionBar();
         }
 
         // Прячем миниатюры и показываем полную картинку. Если анимация только началась,
@@ -387,7 +412,13 @@ public class MovePicView extends Fragment implements MovePicContract.View {
                 });
                 set.start();
                 mImageZoomAnimator = set;
+
+                if (toolbarWillBeShown) {
+                    toolbarDemonstrator.showActionBar();
+                }
             }
+
+
 
             @Override
             public void onOtherEvent(View v, MotionEvent event) {

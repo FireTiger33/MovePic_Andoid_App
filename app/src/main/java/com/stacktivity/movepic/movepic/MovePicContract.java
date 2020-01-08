@@ -13,7 +13,7 @@ public interface MovePicContract {
         void showToast(int resId);
         void showToast(String msg);
         void showImage(int numImage);
-        void showFullscreenImage();
+        void showFullscreenMode();
         int[] getSizeImageContainer();
         void zoomImageFromThumb(android.view.View imageView, Bitmap fullImage,
                                 float centerX, float centerY);
@@ -53,7 +53,7 @@ public interface MovePicContract {
         // Used by BindButtonsViewHolder
         void onBindButtonClick(int pos);
 
-        void onImageClick(android.view.View imageView, Bitmap fullImage);
+        void onImageClick();
         void onImageDoubleClick(android.view.View imageView, Bitmap fullImage, float x, float y);
         int[] getSizeImageContainer();
 
