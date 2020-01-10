@@ -35,7 +35,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import com.stacktivity.movepic.R;
-import com.stacktivity.movepic.controllers.OnDoubleClickListener;
 import com.stacktivity.movepic.controllers.OnDoubleTouchListener;
 import com.stacktivity.movepic.providers.FileManagerDialogProvider;
 import com.stacktivity.movepic.utils.ToolbarDemonstrator;
@@ -52,7 +51,9 @@ public class MovePicView extends Fragment implements MovePicContract.View {
     private MovePicContract.Presenter mPresenter;
     private ToolbarDemonstrator toolbarDemonstrator;
 
-    private FrameLayout imageContainer;
+    private FrameLayout imageContainer;  // TODO delete
+
+    private View basketArea;
     private ImageView expandedImageView;
     private TextView viewCurrentImageNum;
     private float expandedImageCurrentX, expandedImageCurrentY;
@@ -86,7 +87,7 @@ public class MovePicView extends Fragment implements MovePicContract.View {
                 }
                 break;
             case R.id.action_restore_image:
-                mPresenter.onButtonRestoreImageClicked();
+                mPresenter.restoreBufferedImage();
                 break;
         }
         return true;
@@ -157,6 +158,8 @@ public class MovePicView extends Fragment implements MovePicContract.View {
         Log.d(tag, "createImageViewer");
         imageContainer = view.findViewById(R.id.image_container);
         expandedImageView = view.findViewById(R.id.expanded_image);
+        basketArea = view.findViewById(R.id.basket_area);
+        basketArea.setAlpha(0f);
 
         imageViewPager = view.findViewById(R.id.imageViewPager);
         imageViewPager.setAdapter(mPresenter.getImageAdapter());
@@ -169,11 +172,21 @@ public class MovePicView extends Fragment implements MovePicContract.View {
 
             @Override
             public void onPageSelected(int position) {
-                Log.d(tag, "Current image " + position);
                 mPresenter.onImagePageHasChange(position);
-                viewCurrentImageNum.setText(getCurrentImagePositionFromAll());
+                updateCurrentImageNum();
             }
         });
+    }
+
+    @Override
+    public void updateCurrentImageNum() {
+        viewCurrentImageNum.setText(getCurrentImagePositionFromAll());
+    }
+
+    @Override
+    public void setBasketAreaAlpha(double alpha) {
+        Log.d(tag, "alpha = " + alpha);
+        basketArea.setAlpha((float) alpha);
     }
 
     private String getCurrentImagePositionFromAll() {

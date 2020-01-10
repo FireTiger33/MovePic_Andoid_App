@@ -33,8 +33,11 @@
                 android:layout_margin="@dimen/medium_padding"
                 android:textSize="24sp"
                 android:textStyle="italic"
+                android:alpha="0.5"
                 tools:text="12/150" />
 
+            <include
+                layout="@layout/basket_area" />
 
         </FrameLayout>
 

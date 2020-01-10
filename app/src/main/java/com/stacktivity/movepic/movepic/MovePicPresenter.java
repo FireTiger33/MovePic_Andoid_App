@@ -59,6 +59,12 @@ public class MovePicPresenter implements MovePicContract.Presenter {
         repository.setCurrentImageNum(pos);
     }
 
+    @Override
+    public void setPercentToRemove(double val) {
+        if (val > 1f) val = 1f;
+        mView.setBasketAreaAlpha(val * 0.7);
+    }
+
     private void deleteCurrentImage() {
         Log.d(tag, "deleteCurrentImage");
         int left = repository.deleteImage(getCurrentImageNum());
@@ -66,6 +72,7 @@ public class MovePicPresenter implements MovePicContract.Presenter {
             close();
         } else {
             imageAdapter.notifyDataSetChanged();
+            mView.updateCurrentImageNum();
         }
     }
 
@@ -77,15 +84,17 @@ public class MovePicPresenter implements MovePicContract.Presenter {
             close();
         } else {
             imageAdapter.notifyDataSetChanged();
+            mView.updateCurrentImageNum();
         }
     }
 
     @Override
-    public void onButtonRestoreImageClicked() {
+    public boolean restoreBufferedImage() {
         int res = repository.restoreLastDeletedImage(getCurrentImageNum());
         switch (res) {
             case 0: mView.showToast("Picture successfully restored");
                     imageAdapter.notifyDataSetChanged();
+                    mView.updateCurrentImageNum();
                     break;
             case 1: mView.showToast("Recovery error");
                     break;
@@ -94,6 +103,8 @@ public class MovePicPresenter implements MovePicContract.Presenter {
             default: mView.showToast("Unknown error");
                     break;
         }
+
+        return res == 0;
     }
 
     @Override

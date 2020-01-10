@@ -138,7 +138,6 @@ public class MovePicRepository implements MovePicContract.Repository {
             Log.d(tag, fName + "complete");
             fOut.close();
 
-            // Add image to adapter
             imagesPaths.add(currentImageNum, imagesPathBuffer[1]);
 
             deleteLastImageFromBuffer();

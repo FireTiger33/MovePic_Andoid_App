@@ -10,11 +10,16 @@ public interface MovePicContract {
     interface View {
         void setPresenter(MovePicContract.Presenter presenter);
         void setToolbarDemonstrator(ToolbarDemonstrator demonstrator);
+
         void showToast(int resId);
         void showToast(String msg);
+
         void showImage(int numImage);
         void showFullscreenMode();
-        int[] getSizeImageContainer();
+        void updateCurrentImageNum();
+        void setBasketAreaAlpha(double alpha);
+
+        int[] getSizeImageContainer();  // TODO remove
         void zoomImageFromThumb(android.view.View imageView, Bitmap fullImage,
                                 float centerX, float centerY);
 //        void zoomImageFromThumbPath(String imagePath, float centerX, float centerY);
@@ -34,6 +39,10 @@ public interface MovePicContract {
         void onImagePageHasChange(int pos);
 
         /**
+         * @param val take 0..1
+         */
+        void setPercentToRemove(double val);
+        /**
          * Removes the current image from the memory and the adapter itself.
          * Saves Bitmap and path to buffer[2] for possible recovery.
          */
@@ -46,8 +55,10 @@ public interface MovePicContract {
          * 2) Recovery error
          * 3) Buffer is empty
          * 4) Unknown error
+         *
+         * @return true if restore success
          */
-        void onButtonRestoreImageClicked();
+        boolean restoreBufferedImage();
         void changeBindButtonMode();
 
         // Used by BindButtonsViewHolder
